@@ -1,0 +1,13 @@
+{
+    "name": "@real-blackjack/common",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run --config vitest.config.ts"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.0",
+        "vitest": "^1.0.0"
+    }
+}

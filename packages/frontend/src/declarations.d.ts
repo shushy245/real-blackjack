@@ -1,0 +1,9 @@
+declare module '*.module.css' {
+    const styles: Record<string, string>;
+    export = styles;
+}
+
+declare module '*.module.scss' {
+    const styles: Record<string, string>;
+    export = styles;
+}
