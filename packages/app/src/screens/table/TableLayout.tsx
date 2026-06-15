@@ -1,5 +1,4 @@
 import type { JSX } from 'react';
-import { useEffect } from 'react';
 import type { TextStyle } from 'react-native';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,13 +24,6 @@ export const TableLayout = (): JSX.Element => {
     const cashOut = useGameStore((state) => state.cashOut);
 
     const { round, balance } = gameState;
-    const phase = round?.phase;
-
-    useEffect(() => {
-        if (phase === 'dealer-turn') {
-            storeAction({ type: 'RunDealerTurn' });
-        }
-    }, [phase, storeAction]);
 
     const handlePlaceBet = (amount: number): void => storeAction({ type: 'PlaceBet', amount });
     const handleMove = (move: Move): void => storeAction({ type: move });
@@ -45,8 +37,8 @@ export const TableLayout = (): JSX.Element => {
     };
 
     const legalMoves = getLegalMoves(gameState);
-    const canCashOut = round === undefined && balance > 0;
     const isGameOver = round === undefined && balance < GAME_CONFIG.minBet;
+    const canCashOut = round === undefined && !isGameOver;
 
     return (
         <FullColumn style={styles.table}>

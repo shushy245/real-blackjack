@@ -47,7 +47,7 @@ const resolveInitialPhase = (
         if (dealerBJ) return { phase: 'settling', holeCardRevealed: true };
     }
 
-    if (playerBJ) return { phase: 'settling', holeCardRevealed: false };
+    if (playerBJ) return { phase: 'settling', holeCardRevealed: true };
 
     return { phase: 'player-action', holeCardRevealed: false };
 };

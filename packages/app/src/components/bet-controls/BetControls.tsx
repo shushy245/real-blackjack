@@ -19,7 +19,7 @@ export const BetControls = ({ balance, minBet, maxBet, lastBet, onPlaceBet }: Be
 
     const handleClear = (): void => setPendingBet(0);
 
-    const handleRepeat = (): void => setPendingBet(Math.min(lastBet, Math.min(balance, maxBet)));
+    const handleRepeat = (): void => setPendingBet(Math.min(lastBet, balance, maxBet));
 
     const handleDeal = (): void => {
         if (pendingBet < minBet) return;
@@ -28,7 +28,7 @@ export const BetControls = ({ balance, minBet, maxBet, lastBet, onPlaceBet }: Be
     };
 
     const canDeal = pendingBet >= minBet;
-    const canRepeat = lastBet > 0 && lastBet <= balance;
+    const canRepeat = lastBet >= minBet && lastBet <= balance;
 
     return (
         <View style={styles.container}>

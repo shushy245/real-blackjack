@@ -32,10 +32,17 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     lastBet: 0,
 
     action: (move: GameAction) =>
-        set((state) => ({
-            gameState: applyAction(state.gameState, move),
-            lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet,
-        })),
+        set((state) => {
+            let gameState = applyAction(state.gameState, move);
+            if (gameState.round?.phase === 'dealer-turn') {
+                gameState = applyAction(gameState, { type: 'RunDealerTurn' });
+            }
+
+            return {
+                gameState,
+                lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet,
+            };
+        }),
 
     newGame: () => set({ gameState: createGame(GAME_CONFIG), lastBet: 0 }),
 
