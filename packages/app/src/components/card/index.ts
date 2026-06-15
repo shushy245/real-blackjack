@@ -1,2 +1,2 @@
 export { CardView } from './CardView';
-export { CARD_RATIO } from './CardView.utils';
+export { CARD_RATIO, GOLD, NAVY } from './CardView.utils';

@@ -1,6 +1,8 @@
 import { Rank, Suit } from '@real-blackjack/common';
 
 export const CARD_RATIO = 98 / 70;
+export const GOLD = '#C4A44A';
+export const NAVY = '#1B2A4A';
 
 export const suitSymbolMap: Record<Suit, string> = {
     [Suit.Hearts]: '♥',
