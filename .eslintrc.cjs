@@ -130,19 +130,28 @@ module.exports = {
             {
                 type: 'line-length',
                 order: 'asc',
-                'internal-pattern': ['^~/.+'],
-                'newlines-between': 'always',
+                internalPattern: ['^~/.+'],
+                newlinesBetween: 1,
                 groups: [
-                    ['builtin', 'external', 'builtin-type', 'external-type'],
-                    ['internal', 'internal-type'],
-                    ['parent', 'sibling', 'index', 'parent-type', 'sibling-type', 'index-type'],
+                    ['value-builtin', 'value-external', 'type-builtin', 'type-external'],
+                    ['value-internal', 'type-internal'],
+                    [
+                        'value-parent',
+                        'value-sibling',
+                        'value-index',
+                        'type-parent',
+                        'type-sibling',
+                        'type-index',
+                    ],
                     'style',
                     'unknown',
                 ],
-                'custom-groups': {
-                    value: { style: ['\\.(module\\.)?(css|scss)$'] },
-                    type: {},
-                },
+                customGroups: [
+                    {
+                        groupName: 'style',
+                        elementNamePattern: '\\.(module\\.)?(css|scss)$',
+                    },
+                ],
             },
         ],
 
