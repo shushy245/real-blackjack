@@ -28,7 +28,12 @@ EDITED_TS=$(while IFS= read -r line; do
     fi
 done < "$TRANSCRIPT_PATH" | sort -u)
 
-# No TypeScript files touched — nothing to check
+# Filter to files that still exist on disk (deleted files must not be linted)
+EDITED_TS=$(echo "$EDITED_TS" | while IFS= read -r f; do
+    [ -f "$f" ] && echo "$f"
+done)
+
+# No TypeScript files touched (or all were deleted) — nothing to check
 if [ -z "$EDITED_TS" ]; then
     echo '{"decision": "approve"}'
     exit 0
