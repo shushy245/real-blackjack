@@ -54,6 +54,14 @@ describe('createRound — deal phase', () => {
         expect(round.phase).toBe('settling');
     });
 
+    it('hole card is revealed when player has blackjack and round goes directly to settling', () => {
+        // A♠ 6♠ K♠ 9♠ → player: A,K (BJ) | dealer up: 6 — holeCard must be face-up at settlement
+        const shoe = shoeWith([card(Rank.Ace), card(Rank.Six), card(Rank.King), card(Rank.Nine)]);
+        const round = createRound(50, 500, shoe, createRng(42));
+
+        expect(round.holeCardRevealed).toBe(true);
+    });
+
     it('phase is insurance-pending when player has blackjack and dealer shows Ace', () => {
         // A♠ A♥ K♠ 9♠ → player: A,K (BJ) | dealer up: A — offer insurance
         const shoe = shoeWith([
