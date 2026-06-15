@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import type { TextStyle } from 'react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Card, HandValue } from '@real-blackjack/common';
 
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     },
 });
 
-const badgeTextStyleMap: Record<ScoreBadgeVariant, (typeof styles)[keyof typeof styles]> = {
+const badgeTextStyleMap: Record<ScoreBadgeVariant, TextStyle> = {
     normal: styles.badgeTextNormal,
     blackjack: styles.badgeTextBlackjack,
     bust: styles.badgeTextBust,

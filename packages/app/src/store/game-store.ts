@@ -21,6 +21,7 @@ const readPersistedBalance = (): number => {
 
 type GameStore = {
     readonly gameState: GameState;
+    readonly lastBet: number;
     action: (move: GameAction) => void;
     newGame: () => void;
     cashOut: () => void;
@@ -28,10 +29,15 @@ type GameStore = {
 
 export const useGameStore = create<GameStore>()((set, get) => ({
     gameState: createGame({ ...GAME_CONFIG, startingBalance: readPersistedBalance() }),
+    lastBet: 0,
 
-    action: (move: GameAction) => set((state) => ({ gameState: applyAction(state.gameState, move) })),
+    action: (move: GameAction) =>
+        set((state) => ({
+            gameState: applyAction(state.gameState, move),
+            lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet,
+        })),
 
-    newGame: () => set({ gameState: createGame(GAME_CONFIG) }),
+    newGame: () => set({ gameState: createGame(GAME_CONFIG), lastBet: 0 }),
 
     cashOut: () => {
         const { gameState } = get();
@@ -39,7 +45,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
             peak: gameState.sessionPeak,
             endBalance: gameState.balance,
         });
-        set({ gameState: createGame(GAME_CONFIG) });
+        set({ gameState: createGame(GAME_CONFIG), lastBet: 0 });
     },
 }));
 
