@@ -1,4 +1,5 @@
 import { type Rng } from './rng';
+import { shouldDealerHit } from './dealer';
 import { type Shoe, dealCard } from './shoe';
 import { getLegalMoves } from './legal-moves';
 import { Move, Rank, type Card } from './types';
@@ -15,6 +16,7 @@ export type RoundState = {
     readonly activeHandIndex: number;
     readonly originalBet: number;
     readonly activeBet: number;
+    readonly handBets: readonly number[];
     readonly balance: number;
     readonly insuranceBet: number | undefined;
     readonly insuranceTaken: boolean;
@@ -70,6 +72,7 @@ export const createRound = (bet: number, balance: number, shoe: Shoe, _rng: Rng)
         activeHandIndex: 0,
         originalBet: bet,
         activeBet: bet,
+        handBets: [bet],
         balance,
         insuranceBet: undefined,
         insuranceTaken: false,
@@ -108,11 +111,14 @@ const applyDouble = (state: RoundState): RoundState => {
     const [newCard, newShoe] = dealCard(state.shoe);
     const newHand: readonly Card[] = [...activeHand, newCard];
     const newHands = state.playerHands.map((h, i) => (i === state.activeHandIndex ? newHand : h));
+    const doubledBet = state.activeBet * 2;
+    const newHandBets = state.handBets.map((b, i) => (i === state.activeHandIndex ? doubledBet : b));
     const updated: RoundState = {
         ...state,
         shoe: newShoe,
         playerHands: newHands,
-        activeBet: state.activeBet * 2,
+        activeBet: doubledBet,
+        handBets: newHandBets,
         balance: state.balance - state.activeBet,
     };
 
@@ -140,7 +146,14 @@ const applySplit = (state: RoundState): RoundState => {
         ...state.playerHands.slice(state.activeHandIndex + 1),
     ];
 
-    return { ...state, shoe: shoe2, playerHands: newHands };
+    const newHandBets = [
+        ...state.handBets.slice(0, state.activeHandIndex),
+        state.originalBet,
+        state.originalBet,
+        ...state.handBets.slice(state.activeHandIndex + 1),
+    ];
+
+    return { ...state, shoe: shoe2, playerHands: newHands, handBets: newHandBets };
 };
 
 const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundState => {
@@ -181,4 +194,19 @@ export const applyRoundAction = (state: RoundState, action: PlayerAction): Round
     if (handler === undefined) throw new Error(`applyRoundAction: unhandled move ${action.type}`);
 
     return handler(state);
+};
+
+export const runDealerTurn = (state: RoundState): RoundState => {
+    if (state.phase !== 'dealer-turn') throw new Error(`runDealerTurn: expected dealer-turn phase, got ${state.phase}`);
+
+    let dealerCards = [...state.dealerCards];
+    let shoe = state.shoe;
+
+    while (shouldDealerHit(calculateHand(dealerCards))) {
+        const [newCard, newShoe] = dealCard(shoe);
+        dealerCards = [...dealerCards, newCard];
+        shoe = newShoe;
+    }
+
+    return { ...state, dealerCards, shoe, holeCardRevealed: true, phase: 'settling' };
 };

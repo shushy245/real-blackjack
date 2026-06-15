@@ -1,0 +1,190 @@
+import { describe, expect, it } from 'vitest';
+
+import { createRng } from './rng';
+import type { Shoe } from './shoe';
+import type { Card } from './types';
+import { settleRound } from './payouts';
+import { Move, Rank, Suit } from './types';
+import { applyRoundAction, createRound, runDealerTurn } from './round';
+
+const card = (rank: Rank, suit = Suit.Spades): Card => ({ rank, suit });
+
+const shoeWith = (cards: Card[]): Shoe => ({
+    cards: [...cards, ...Array(312 - cards.length).fill(card(Rank.Two))],
+    dealtCount: 0,
+});
+
+// deal phase: p1, d-up, p2, d-hole, then extra cards
+const dealerTurnRound = (playerCards: [Card, Card], dealerUp: Card, dealerHole: Card, extraCards: Card[]) => {
+    const shoe = shoeWith([playerCards[0], dealerUp, playerCards[1], dealerHole, ...extraCards]);
+
+    return createRound(50, 500, shoe, createRng(42));
+};
+
+describe('runDealerTurn', () => {
+    it('reveals hole card at start of dealer turn', () => {
+        // player: 7+K=17, dealer: 6+K=16 → player stands → dealer turn
+        const round = dealerTurnRound([card(Rank.Seven), card(Rank.King)], card(Rank.Six), card(Rank.King), []);
+        const stood = applyRoundAction(round, { type: Move.Stand });
+        const dealerRound = runDealerTurn(stood);
+
+        expect(dealerRound.holeCardRevealed).toBe(true);
+    });
+
+    it('dealer draws cards until shouldDealerHit is false', () => {
+        // player: 7+K=17 (stands), dealer: 6+K=16 → dealer must hit → gets Two → 18 → stop
+        const round = dealerTurnRound([card(Rank.Seven), card(Rank.King)], card(Rank.Six), card(Rank.King), [
+            card(Rank.Two),
+        ]);
+        const stood = applyRoundAction(round, { type: Move.Stand });
+        const dealerRound = runDealerTurn(stood);
+
+        expect(dealerRound.dealerCards).toHaveLength(3);
+        expect(dealerRound.phase).toBe('settling');
+    });
+
+    it('dealer stops on hard 17', () => {
+        // dealer: 7+K=17 → stands immediately
+        const round = dealerTurnRound([card(Rank.Three), card(Rank.King)], card(Rank.Seven), card(Rank.King), []);
+        const stood = applyRoundAction(round, { type: Move.Stand });
+        const dealerRound = runDealerTurn(stood);
+
+        expect(dealerRound.dealerCards).toHaveLength(2);
+    });
+
+    it('dealer stops on soft 18+', () => {
+        // dealer: A+7 = soft 18 → stands
+        const round = dealerTurnRound([card(Rank.Three), card(Rank.King)], card(Rank.Ace), card(Rank.Seven), []);
+        // dealer up is Ace → insurance-pending; decline insurance to get to player-action
+        const declined = applyRoundAction(round, { type: Move.Stand });
+        const stood = applyRoundAction(declined, { type: Move.Stand });
+        const dealerRound = runDealerTurn(stood);
+
+        expect(dealerRound.dealerCards).toHaveLength(2);
+    });
+
+    it('dealer does not draw additional cards after busting', () => {
+        // dealer: 6+K=16 → hits → gets King → 26 (bust)
+        const round = dealerTurnRound([card(Rank.Three), card(Rank.King)], card(Rank.Six), card(Rank.King), [
+            card(Rank.King),
+        ]);
+        const stood = applyRoundAction(round, { type: Move.Stand });
+        const dealerRound = runDealerTurn(stood);
+
+        expect(dealerRound.dealerCards).toHaveLength(3);
+        expect(dealerRound.phase).toBe('settling');
+    });
+});
+
+describe('settleRound', () => {
+    it('player bust → loss regardless of dealer result', () => {
+        // player: 7+9=16, hits King → bust; dealer: 6+K=16
+        const shoe = shoeWith([card(Rank.Seven), card(Rank.Six), card(Rank.Nine), card(Rank.King), card(Rank.King)]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        const hit = applyRoundAction(round, { type: Move.Hit });
+        const settled = runDealerTurn(hit);
+        const { netDelta, handResults } = settleRound(settled);
+
+        expect(handResults[0]?.outcome).toBe('lose');
+        expect(netDelta).toBeLessThan(0);
+    });
+
+    it('dealer bust, player not bust → player wins 1:1', () => {
+        // player: 7+K=17 (stand), dealer: 6+K=16, hits King → bust
+        const shoe = shoeWith([card(Rank.Seven), card(Rank.Six), card(Rank.King), card(Rank.King), card(Rank.King)]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        const stood = applyRoundAction(round, { type: Move.Stand });
+        const settled = runDealerTurn(stood);
+        const { netDelta, handResults } = settleRound(settled);
+
+        expect(handResults[0]?.outcome).toBe('win');
+        expect(netDelta).toBe(50);
+    });
+
+    it('player higher total → win 1:1', () => {
+        // player: 8+K=18, dealer: 6+K=16, hits Two → 18 ... wait need higher
+        // player: 9+K=19 (stand), dealer: 6+K=16, hits Two → 18 → stand
+        const shoe = shoeWith([card(Rank.Nine), card(Rank.Six), card(Rank.King), card(Rank.King), card(Rank.Two)]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        const stood = applyRoundAction(round, { type: Move.Stand });
+        const settled = runDealerTurn(stood);
+        const { netDelta, handResults } = settleRound(settled);
+
+        expect(handResults[0]?.outcome).toBe('win');
+        expect(netDelta).toBe(50);
+    });
+
+    it('equal totals (non-BJ) → push', () => {
+        // player: 7+K=17 (stand), dealer: 7+K=17 → stand immediately
+        const shoe = shoeWith([card(Rank.Seven), card(Rank.Seven), card(Rank.King), card(Rank.King)]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        const stood = applyRoundAction(round, { type: Move.Stand });
+        const settled = runDealerTurn(stood);
+        const { netDelta, handResults } = settleRound(settled);
+
+        expect(handResults[0]?.outcome).toBe('push');
+        expect(netDelta).toBe(0);
+    });
+
+    it('player BJ, dealer not BJ → win 3:2', () => {
+        // player: A+K=BJ, dealer: 6+9 (no BJ) → settling immediately
+        const shoe = shoeWith([card(Rank.Ace), card(Rank.Six), card(Rank.King), card(Rank.Nine)]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        // round is already 'settling' due to player BJ
+        const { netDelta, handResults } = settleRound(round);
+
+        expect(handResults[0]?.outcome).toBe('blackjack');
+        expect(netDelta).toBe(75); // 3:2 on 50 = 75
+    });
+
+    it('player BJ, dealer BJ → push', () => {
+        // player: A♠+K, dealer: A♥(up)+K(hole) → dealer peek finds BJ → settling
+        const shoe = shoeWith([
+            card(Rank.Ace, Suit.Spades),
+            card(Rank.Ace, Suit.Hearts),
+            card(Rank.King, Suit.Spades),
+            card(Rank.King, Suit.Hearts),
+        ]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        const { netDelta, handResults } = settleRound(round);
+
+        expect(handResults[0]?.outcome).toBe('push');
+        expect(netDelta).toBe(0);
+    });
+
+    it('insurance + dealer BJ → insurance pays 2:1; original bet pushes', () => {
+        // player: 7+9=16, dealer: A(up)+K(hole)=BJ
+        // peek finds dealer BJ → settling with holeCardRevealed
+        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        // dealer has BJ → phase is settling already (peek reveals it)
+        expect(round.phase).toBe('settling');
+        // Simulate insurance already accepted (insuranceBet = 25)
+        const withInsurance = { ...round, insuranceBet: 25, insuranceTaken: true };
+        const { netDelta } = settleRound(withInsurance);
+
+        // insurance wins 2:1 on 25 = +50; original bet pushes (0) → net = +50
+        expect(netDelta).toBe(50);
+    });
+
+    it('insurance + dealer no BJ → insurance lost; original bet settles normally', () => {
+        // player: 7+9=16, dealer: A(up)+3(hole)=no BJ; player stands → dealer draws to 17+
+        const shoe = shoeWith([
+            card(Rank.Seven),
+            card(Rank.Ace),
+            card(Rank.Nine),
+            card(Rank.Three),
+            card(Rank.Four), // dealer draws: A+3+4=8... wait A=11+3+4=18, stands
+        ]);
+        const round = createRound(50, 500, shoe, createRng(42));
+        // dealer shows Ace, no BJ → insurance-pending
+        expect(round.phase).toBe('insurance-pending');
+        const accepted = applyRoundAction(round, { type: Move.Insurance });
+        const stood = applyRoundAction(accepted, { type: Move.Stand });
+        const settled = runDealerTurn(stood);
+        const { netDelta } = settleRound(settled);
+
+        // player 16 loses to dealer 18; insurance lost (-25); net = -50 (bet) - 25 (insurance) = -75
+        expect(netDelta).toBe(-75);
+    });
+});

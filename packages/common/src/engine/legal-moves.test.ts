@@ -19,6 +19,7 @@ const baseState = (): RoundState => ({
     balance: 500,
     insuranceBet: undefined,
     insuranceTaken: false,
+    handBets: [50],
 });
 
 describe('getLegalMoves', () => {

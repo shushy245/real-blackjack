@@ -130,6 +130,7 @@ describe('applyRoundAction — Stand', () => {
         const twoHand: typeof base = {
             ...base,
             playerHands: [base.playerHands[0] ?? [], [card(Rank.Nine), card(Rank.Three)]],
+            handBets: [50, 50],
             activeHandIndex: 0,
         };
         const next = applyRoundAction(twoHand, { type: Move.Stand });
@@ -187,6 +188,7 @@ describe('applyRoundAction — Split', () => {
                 [card(Rank.Eight, Suit.Diamonds), card(Rank.Five)],
                 [card(Rank.Two), card(Rank.Four)],
             ],
+            handBets: [50, 50, 50, 50],
         };
 
         expect(() => applyRoundAction(fourHands, { type: Move.Split })).toThrow();
