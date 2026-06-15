@@ -25,3 +25,11 @@ export type Card = {
     rank: Rank;
     suit: Suit;
 };
+
+export enum Move {
+    Hit = 'Hit',
+    Stand = 'Stand',
+    Double = 'Double',
+    Split = 'Split',
+    Insurance = 'Insurance',
+}
