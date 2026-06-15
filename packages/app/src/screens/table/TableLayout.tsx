@@ -1,15 +1,20 @@
 import type { JSX } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import type { RoundState } from '@real-blackjack/common';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { calculateHand, isBlackjack } from '@real-blackjack/common';
 
 import { FullColumn } from '~/components/ui';
+import { useGameStore } from '~/store/game-store';
+import { DealerHand, PlayerHand } from '~/components/hand';
 
 const FELT = '#0D5C2E';
 const RAIL = '#2C1204';
 
 export const TableLayout = (): JSX.Element => {
     const insets = useSafeAreaInsets();
+    const round = useGameStore((state) => state.gameState.round);
 
     return (
         <FullColumn style={styles.table}>
@@ -17,11 +22,11 @@ export const TableLayout = (): JSX.Element => {
                 <FeltTexture />
             </View>
             <View style={[styles.content, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-                <DealerZone />
+                <DealerZone round={round} />
                 <Rail />
                 <BetZone />
                 <Rail />
-                <PlayerZone />
+                <PlayerZone round={round} />
             </View>
         </FullColumn>
     );
@@ -40,11 +45,28 @@ const FeltTexture = (): JSX.Element => (
     </Svg>
 );
 
-const DealerZone = (): JSX.Element => (
-    <View style={styles.dealerZone}>
-        <Text style={styles.zoneLabel}>{`DEALER`}</Text>
-    </View>
-);
+type DealerZoneProps = { round: RoundState | undefined };
+
+const DealerZone = ({ round }: DealerZoneProps): JSX.Element => {
+    if (round === undefined) {
+        return (
+            <View style={styles.dealerZone}>
+                <Text style={styles.zoneLabel}>{`DEALER`}</Text>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.dealerZone}>
+            <DealerHand
+                cards={round.dealerCards}
+                hand={calculateHand(round.dealerCards)}
+                isBlackjack={isBlackjack(round.dealerCards)}
+                holeRevealed={round.holeCardRevealed}
+            />
+        </View>
+    );
+};
 
 const Rail = (): JSX.Element => (
     <View style={styles.rail}>
@@ -60,11 +82,26 @@ const BetZone = (): JSX.Element => (
     </View>
 );
 
-const PlayerZone = (): JSX.Element => (
-    <View style={styles.playerZone}>
-        <Text style={styles.zoneLabel}>{`PLAYER`}</Text>
-    </View>
-);
+type PlayerZoneProps = { round: RoundState | undefined };
+
+const PlayerZone = ({ round }: PlayerZoneProps): JSX.Element => {
+    if (round === undefined) {
+        return (
+            <View style={styles.playerZone}>
+                <Text style={styles.zoneLabel}>{`PLAYER`}</Text>
+            </View>
+        );
+    }
+
+    const activeHand = round.playerHands[round.activeHandIndex];
+    if (activeHand === undefined) return <View style={styles.playerZone} />;
+
+    return (
+        <View style={styles.playerZone}>
+            <PlayerHand cards={activeHand} hand={calculateHand(activeHand)} isBlackjack={isBlackjack(activeHand)} />
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     table: {
