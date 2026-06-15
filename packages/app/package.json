@@ -1,0 +1,33 @@
+{
+    "name": "@real-blackjack/app",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "private": true,
+    "scripts": {
+        "start": "expo start",
+        "android": "expo start --android",
+        "ios": "expo start --ios",
+        "web": "expo start --web",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@real-blackjack/common": "workspace:*",
+        "expo": "~56.0.11",
+        "expo-av": "~15.1.6",
+        "expo-haptics": "~14.1.4",
+        "expo-router": "~4.0.20",
+        "expo-status-bar": "~56.0.4",
+        "moti": "^0.30.0",
+        "react": "19.2.3",
+        "react-native": "0.85.3",
+        "react-native-mmkv": "^3.2.0",
+        "react-native-reanimated": "~3.17.4",
+        "react-native-safe-area-context": "5.4.0",
+        "react-native-screens": "~4.10.0",
+        "zustand": "^5.0.3"
+    },
+    "devDependencies": {
+        "@types/react": "~19.2.2",
+        "typescript": "~6.0.3"
+    }
+}

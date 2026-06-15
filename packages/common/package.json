@@ -2,6 +2,8 @@
     "name": "@real-blackjack/common",
     "version": "0.0.1",
     "private": true,
+    "main": "src/engine/index.ts",
+    "types": "src/engine/index.ts",
     "scripts": {
         "typecheck": "tsc --noEmit",
         "test": "vitest run --config vitest.config.ts"
