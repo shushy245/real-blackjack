@@ -5,7 +5,7 @@ import type { RoundState } from '@real-blackjack/common';
 import type { AnimatedStyle } from 'react-native-reanimated';
 import { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 
-import { FLIP_DURATION_MS } from '../components/card/FlippableCard';
+import { FLIP_DURATION_MS } from './constants';
 
 type ResultFeedbackStyles = {
     winFlashStyle: AnimatedStyle<ViewStyle>;
