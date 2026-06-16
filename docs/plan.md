@@ -605,6 +605,98 @@ Files: `round.ts`, `__mocks__/react-native-mmkv.ts`, `leaderboard-store.ts`, `Ta
 - **A4.4** ✅ — Chip tap: chip bounces into stack with spring; stack height animates up
 - **A4.5** ✅ — Split: two cards spread horizontally to new hand positions with position animation
 
+---
+
+**TASK BF4 — Bug Fixes — Post-Epic-4 code review surfaced 6 bugs; fix all before Epic 5**
+
+All 6 bugs found by `/code-review high 2ee2f5d` on 2026-06-16. Fix all before starting Epic 5.
+
+**BF4-1 (HIGH) — Flash fires before hole card is revealed** (`useResultFeedback.ts:22`)
+
+The Zustand store collapses `dealer-turn` synchronously in one dispatch (`game-store.ts:37-39`), so `holeCardRevealed=true` and `phase='settling'` land in a single React commit. Both the 450ms `FlippableCard` flip and the 1000ms flash `withSequence` start at t=0. The flash peaks at t=200ms; the card face becomes geometrically visible only at t=225ms (when `rotateY` crosses 90°). For those 200ms a green or red overlay telegraphs the outcome while the hole card still shows its back.
+
+Fix: delay the flash by at least 450ms (duration of the hole-card flip). Change `useResultFeedback` to accept an `initialDelayMs` param (default 0, pass 450 from `PlayerZonePanel`), or use `withDelay` in the `withSequence`:
+```ts
+winFlash.value = withDelay(450, withSequence(
+    withTiming(FLASH_OPACITY, { duration: FLASH_IN_MS }),
+    withTiming(0, { duration: FLASH_OUT_MS }),
+));
+```
+
+---
+
+**BF4-2 (HIGH) — React key collision in DealerHand with 6-deck shoe** (`DealerHand.tsx:41`)
+
+`key={\`${card.rank}-${card.suit}\`}` is not unique in a 6-deck shoe (`DECK_COUNT=6`). The upcard (index 0) and hole card (index 1) share the same rank+suit on ~1.6% of hands. React reconciles the `FlippableCard` subtree against the wrong fiber, emits a duplicate-key warning in dev, and the flip animation either fires on the wrong card or fails to mount cleanly.
+
+Fix: use the card's array index as the key (`key={i}`). The dealer card list is append-only and never reordered, so index is a safe key. Apply the same check to `PlayerHand` if it uses the same rank+suit keying strategy.
+
+---
+
+**BF4-3 (HIGH) — `backfaceVisibility:'hidden'` unreliable on Android** (`FlippableCard.tsx:47`)
+
+On Android, Skia/OpenGL does not consistently honor `backfaceVisibility:'hidden'` for Reanimated worklet-driven transforms. At rest with `flipped=false`, `frontFace` is rotated -180° but may remain visually present as a mirrored face-up card on top of the back, revealing the hole card's rank/suit before reveal.
+
+Fix: remove `backfaceVisibility` and drive visibility via `opacity` in the animated styles:
+```ts
+const backStyle = useAnimatedStyle(() => ({
+    opacity: progress.value < 0.5 ? 1 : 0,
+    transform: [{ perspective: 1200 }, { rotateY: `${interpolate(progress.value, [0, 1], [0, Math.PI])}rad` }],
+}));
+const frontStyle = useAnimatedStyle(() => ({
+    opacity: progress.value >= 0.5 ? 1 : 0,
+    transform: [{ perspective: 1200 }, { rotateY: `${interpolate(progress.value, [0, 1], [-Math.PI, 0])}rad` }],
+}));
+```
+This works correctly on all platforms and eliminates the platform-specific dependency.
+
+---
+
+**BF4-4 (MEDIUM) — Ghost flash bleeds into next round** (`TableLayout.tsx:240`)
+
+`winFlash`/`bustFlash` are `useSharedValue`s that animate on the Reanimated native thread independently of whether their `Animated.View` consumers are mounted. If the user taps COLLECT within ~500ms of settling (while the 1000ms flash is still active, value ~0.25), the flash `Animated.View`s unmount. When a new bet is placed and they remount, the still-non-zero shared value produces a ghost green or red flash at the start of an unrelated new round.
+
+Fix: in `useResultFeedback`, reset the shared values when leaving the settling phase. In the same `useEffect`, add a path that fires when `prevPhase === 'settling'` and new phase is not:
+```ts
+if (prevPhase === 'settling' && phase !== 'settling') {
+    cancelAnimation(winFlash);
+    cancelAnimation(bustFlash);
+    winFlash.value = 0;
+    bustFlash.value = 0;
+}
+```
+
+---
+
+**BF4-5 (LOW) — `round` missing from `useResultFeedback` effect dep array** (`useResultFeedback.ts:44`)
+
+The dep array is `[round?.phase]` but the effect body calls `settleRound(round)` (line 31) and guards on `round === undefined` (line 27). Under React concurrent features, an interrupted render can cause the effect to fire with a stale `round` snapshot. `settleRound` would then receive stale hand data and could compute the wrong `netDelta`, showing the wrong flash color.
+
+Fix: add `round` to the dep array. The guard on lines 27-29 (`phase !== 'settling' || prevPhase === 'settling' || round === undefined`) already prevents the inner block from running unless settling is newly entered — adding `round` does not change the firing semantics.
+
+---
+
+**BF4-6 (LOW) — Rapid chip taps restart spring mid-flight, causing uneven bounce** (`BetControls.tsx:121`)
+
+Assigning `scale.value = withSequence(...)` while a prior sequence is in-flight cancels the animation from its current intermediate scale. A second tap at `scale ≈ 1.1` starts `withSpring(1.2)` from 1.1 rather than 1, producing a shorter arc, different velocity, and a visible shudder. Most pronounced for low-denomination chips where `disabled` stays `false` across many consecutive taps.
+
+Fix: gate the animation with a flag:
+```ts
+const animating = useRef(false);
+const handlePress = (): void => {
+    if (!animating.current) {
+        animating.current = true;
+        scale.value = withSequence(
+            withSpring(1.2, { damping: 8, stiffness: 300 }),
+            withSpring(1, {}, () => { animating.current = false; }),
+        );
+    }
+    onChip(denom);
+};
+```
+
+---
+
 ### Epic 5 — Sound & Haptics
 
 - **A5.1** — `expo-av` sound setup; `useSounds` hook loads all 5 assets once at mount
