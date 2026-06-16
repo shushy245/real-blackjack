@@ -181,6 +181,11 @@ type LeaderboardStore = {
 8. Cash Out flow
 9. Leaderboard screen
 
+**Bug Fixes — Post-Epic-3 code review surfaced 10 bugs; fix all before Epic 4**
+1. Insurance subsystem (4 blocking bugs — fix together)
+2. Bust persistence + split-hand rendering (2 high-priority bugs)
+3. Housekeeping (4 low-priority — unused param, test leakage, sort tiebreaker, domain logic in UI)
+
 **Epic 4 — Animations** (Reanimated 3 + Moti)
 1. Card deal: slide from shoe position to hand
 2. Hole card flip: rotateY reveal (face swap at 90°)
@@ -528,6 +533,69 @@ Target: felt and cards look like a real casino, not a tutorial project.
 - **A3.7** — Game Over screen: balance $0; session stats (peak reached); "New Game" CTA
 - **A3.8** — Cash Out flow: confirmation prompt; writes session to LeaderboardStore; → new game
 - **A3.9** — Leaderboard screen: ranked session list; peak + end balance per entry; date
+
+### Bug Fixes — Post-Epic-3
+
+All 10 bugs were found by a code-review over Epics 1–3 (2026-06-16). Fix all before starting Epic 4.
+
+---
+
+**TASK BF1 — Insurance subsystem (4 interrelated blocking bugs)**
+
+All 4 touch the same feature; fix in one pass with TDD.
+
+Files: `packages/common/src/engine/legal-moves.ts`, `round.ts`, `payouts.ts`
+
+Bug list:
+1. `getLegalMoves` returns `[]` during `insurance-pending` (legal-moves.ts:5) — ActionBar renders empty, player is stuck
+2. Dealer Ace up-card + BJ hole → jumps to `settling` without offering insurance (round.ts:40)
+3. Declining insurance (`Move.Stand`) sets `insuranceTaken: true` (round.ts:173) — payout treats decline same as take
+4. Insurance taken + dealer BJ → main hand settles as `push payout:0`; combined with `originalBet` restoration in `applyCollectResult` → player nets +$100 instead of $0 (payouts.ts:24)
+
+Fixes:
+- `legal-moves.ts`: add `if (state.phase === 'insurance-pending') return [Move.Insurance, Move.Stand];` before the `player-action` guard
+- `round.ts:40`: when dealer shows Ace and hole is BJ, still enter `insurance-pending`; after the player decision, check dealer BJ and resolve to `settling`
+- `round.ts:173`: Move.Stand decline — do NOT set `insuranceTaken: true`; use a separate `insurancePhaseResolved` flag, or change payout guard to key on `insuranceBet !== undefined` instead of `insuranceTaken`
+- `payouts.ts:24`: when `dealerBJ && insuranceTaken && !playerBJ`, return `{ outcome: 'lose', payout: -bet }` (not `push`). The insurance profit in `insuranceDelta` covers the loss — net is 0 as expected.
+
+Test list (add to round.test.ts + payouts.test.ts, or new insurance.test.ts):
+- `getLegalMoves` during `insurance-pending` returns `[Move.Insurance, Move.Stand]`
+- Dealer Ace + BJ hole: phase is `insurance-pending`, not `settling`
+- After player declines (Move.Stand in insurance-pending): `insuranceTaken` is false, `insuranceBet` is undefined, phase is `player-action`
+- After player takes (Move.Insurance): `insuranceTaken` is true, `insuranceBet = floor(bet/2)`, phase is `player-action`
+- Decline + dealer BJ: player loses main bet (no free push)
+- Take + dealer BJ: `netDelta = 0` (insurance pays 2:1, main bet lost, net even)
+- Take + no dealer BJ: insurance lost, main bet settles normally
+
+---
+
+**TASK BF2 — Persistence + split-hand rendering (2 high-priority bugs)**
+
+Files: `packages/app/src/store/game-store.ts`, `packages/app/src/screens/table/TableLayout.tsx`
+
+Bug 5 — `readPersistedBalance` rejects balance 0 as invalid (game-store.ts:19):
+- `parsed > 0` guard treats a legitimate bust ($0) as corrupt data and resets to $1000
+- Fix: change to `parsed >= 0`
+- Test: persisted `"0"` → `readPersistedBalance()` returns 0 (not startingBalance)
+
+Bug 6 — Only active split hand rendered; other hands invisible (TableLayout.tsx:239):
+- `PlayerZonePanel` passes only `round.playerHands[round.activeHandIndex]` to `PlayerHand`
+- When player has 2+ hands from a split, inactive hands disappear
+- Fix: render all `round.playerHands`; highlight the active one; inactive hands shown smaller or dimmed
+- Note: the animation spec (Epic 4 A4.5) will drive final layout — implement a static version now that correctly renders all hands
+
+---
+
+**TASK BF3 — Housekeeping (4 low-priority bugs)**
+
+Files: `round.ts`, `__mocks__/react-native-mmkv.ts`, `leaderboard-store.ts`, `TableLayout.tsx`
+
+- `round.ts:55`: remove unused `_rng` parameter from `createRound` and its call site in `game.ts:57`
+- `__mocks__/react-native-mmkv.ts`: call `clearAllMMKVStores()` in `beforeEach` in both `game-store.test.ts` and `leaderboard-store.test.ts`
+- `leaderboard-store.ts:45`: add date tiebreaker to sort: `.sort((a, b) => b.peak - a.peak || b.date.localeCompare(a.date))`
+- `TableLayout.tsx:186`: `settleRound` called in UI to drive display labels — flag for future cleanup when Epic 4 adds animation hooks that will need the result data; do not refactor now (scope gate: only move it if Epic 4 work demands it)
+
+---
 
 ### Epic 4 — Animations
 

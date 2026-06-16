@@ -34,11 +34,12 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - Card rendering is fully encapsulated in `CardView` — art is swappable without touching engine or store
 
 ## What's done
-- Project planning complete: all rules, UX, tech stack, and architecture decisions resolved
-- Monorepo scaffolded: ESLint, TypeScript, Vitest, Husky pre-commit hook
-- Full plan written to `docs/plan.md`
+- Epics 1–3 complete: full engine (E1–E10), app shell (A1–A4), table UI (A3.1–A3.9)
+- Epic 3 code review (2026-06-16) found 10 bugs documented in `docs/plan.md` under "Bug Fixes — Post-Epic-3"
 
 ## What's next
-- **TASK E1** — Card types + deck creation (`packages/common/src/engine/types.ts` + `deck.ts`)
-- Engine first: complete all of Epic 1 (tasks E1–E10) before any RN/Expo work
-- See `docs/plan.md` for the complete task breakdown with TDD test lists
+- **TASK BF1** — Insurance subsystem (4 interrelated bugs; fix first, highest priority)
+- **TASK BF2** — Persistence + split-hand rendering (2 bugs)
+- **TASK BF3** — Housekeeping (4 low-priority items)
+- Then **Epic 4** — Animations (A4.1–A4.5)
+- See `docs/plan.md` → "Bug Fixes — Post-Epic-3" for full details on each bug and the fix strategy
