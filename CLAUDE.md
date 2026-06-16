@@ -8,13 +8,6 @@
 **Read `docs/plan.md` in full before touching any code — it is the authoritative plan.**
 **Before ending any session: update "What's done" and "What's next" in this file, and mark completed tasks in `docs/plan.md`.**
 
-## Planning Process — new ideas and features
-When a new idea, feature, or epic is presented:
-1. **Interview first** — ask the specific questions whose answers change the design (scope, constraints, rules, edge cases, UX decisions). Do not propose an implementation plan until those answers are in hand. Push back where warranted.
-2. **Align on the plan** — once the interview is complete, write up the proposed epic/story/task breakdown (in `docs/plan.md` format) and present it for approval. No code until approved.
-3. **Update the plan files** — after approval, add the new work to `docs/plan.md` (following the existing epic → story → task structure) and update "What's next" in this file to point to it.
-4. **Then implement** — only when explicitly asked to start in this session.
-
 ## Recipes
 <!-- Add recipes as patterns emerge — never upfront. Format: numbered steps + real code block. -->
 
