@@ -1,25 +1,15 @@
 import { create } from 'zustand';
-import { MMKV } from 'react-native-mmkv';
+import type { StoreApi, UseBoundStore } from 'zustand';
 import { applyAction, createGame } from '@real-blackjack/common';
 import type { GameAction, GameState } from '@real-blackjack/common';
 
-import { useLeaderboardStore } from './leaderboard-store';
+import type { StoragePort } from './storage.port';
 
 export const GAME_CONFIG = { startingBalance: 1000, minBet: 10, maxBet: 1000 } as const;
 
 const BALANCE_KEY = 'game.balance';
 
-const storage = new MMKV({ id: 'game-store' });
-
-const readPersistedBalance = (): number => {
-    const raw = storage.getString(BALANCE_KEY);
-    if (raw === undefined) return GAME_CONFIG.startingBalance;
-    const parsed = parseInt(raw, 10);
-
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : GAME_CONFIG.startingBalance;
-};
-
-type GameStore = {
+type GameStoreState = {
     readonly gameState: GameState;
     readonly lastBet: number;
     action: (move: GameAction) => void;
@@ -27,35 +17,48 @@ type GameStore = {
     cashOut: () => void;
 };
 
-export const useGameStore = create<GameStore>()((set, get) => ({
-    gameState: createGame({ ...GAME_CONFIG, startingBalance: readPersistedBalance() }),
-    lastBet: 0,
+type GameStoreDeps = {
+    storage: StoragePort;
+    onSessionEnd: (params: { peak: number; endBalance: number }) => void;
+};
 
-    action: (move: GameAction) =>
-        set((state) => {
-            let gameState = applyAction(state.gameState, move);
-            if (gameState.round?.phase === 'dealer-turn') {
-                gameState = applyAction(gameState, { type: 'RunDealerTurn' });
-            }
+export const makeGameStore = ({ storage, onSessionEnd }: GameStoreDeps): UseBoundStore<StoreApi<GameStoreState>> => {
+    const store = create<GameStoreState>()((set, get) => ({
+        gameState: createGame(GAME_CONFIG),
+        lastBet: 0,
 
-            return {
-                gameState,
-                lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet,
-            };
-        }),
+        action: (move: GameAction) =>
+            set((state) => {
+                let gameState = applyAction(state.gameState, move);
+                if (gameState.round?.phase === 'dealer-turn') {
+                    gameState = applyAction(gameState, { type: 'RunDealerTurn' });
+                }
 
-    newGame: () => set({ gameState: createGame(GAME_CONFIG), lastBet: 0 }),
+                return {
+                    gameState,
+                    lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet,
+                };
+            }),
 
-    cashOut: () => {
-        const { gameState } = get();
-        useLeaderboardStore.getState().addSession({
-            peak: gameState.sessionPeak,
-            endBalance: gameState.balance,
-        });
-        set({ gameState: createGame(GAME_CONFIG), lastBet: 0 });
-    },
-}));
+        newGame: () => set({ gameState: createGame(GAME_CONFIG), lastBet: 0 }),
 
-useGameStore.subscribe((state) => {
-    storage.set(BALANCE_KEY, state.gameState.balance.toString());
-});
+        cashOut: () => {
+            const { gameState } = get();
+            onSessionEnd({ peak: gameState.sessionPeak, endBalance: gameState.balance });
+            set({ gameState: createGame(GAME_CONFIG), lastBet: 0 });
+        },
+    }));
+
+    storage.getItem(BALANCE_KEY).then((raw) => {
+        if (raw === undefined) return;
+        const parsed = parseInt(raw, 10);
+        if (!Number.isFinite(parsed) || parsed < 0) return;
+        store.setState({ gameState: createGame({ ...GAME_CONFIG, startingBalance: parsed }) });
+    });
+
+    store.subscribe((state) => {
+        storage.setItem(BALANCE_KEY, state.gameState.balance.toString());
+    });
+
+    return store;
+};

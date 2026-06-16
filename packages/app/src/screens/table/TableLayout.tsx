@@ -9,9 +9,9 @@ import { Move, calculateHand, getLegalMoves, isBlackjack, settleRound } from '@r
 
 import { FullColumn } from '~/components/ui';
 import { ActionBar } from '~/components/action-bar';
+import { GAME_CONFIG, useGameStore } from '~/store';
 import { BetControls } from '~/components/bet-controls';
 import { DealerHand, PlayerHand } from '~/components/hand';
-import { GAME_CONFIG, useGameStore } from '~/store/game-store';
 import { useResultFeedback } from '~/animations/useResultFeedback';
 
 const FELT = '#0D5C2E';

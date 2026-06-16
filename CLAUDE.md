@@ -40,8 +40,15 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - Epic 3 code review (2026-06-16) found 10 bugs; all fixed in BF1–BF3 (2026-06-16)
 - BF1 insurance fix note: `insuranceTaken: true` is set on BOTH take and decline paths (prevents re-offer in `getLegalMoves`); payout discrimination uses `insuranceBet !== undefined` (only set on take). The plan's original BF1 test expectation that decline leaves `insuranceTaken: false` was the bug — code-review caught and corrected this.
 - Epic 4 complete (2026-06-16): A4.1 deal slide (DealingCard/Moti), A4.2 hole-card flip (FlippableCard/Reanimated rotateY), A4.3 win/bust flash (useResultFeedback hook), A4.4 chip bounce (AnimatedChip withSequence spring), A4.5 split layout (LinearTransition + FadeIn)
+- Epic 4 code review (2026-06-16) found 6 bugs; all fixed in BF4 (2026-06-16), commit 5c6b704
+- BF4 code review (2026-06-16) found 5 follow-up items (see What's next)
 - 117 tests green: 103 engine (Vitest) + 14 app (Jest)
 
 ## What's next
-- **Epic 5** — Sound & Haptics (A5.1–A5.3): expo-av setup, deal/flip/chip/win/bust sounds, expo-haptics on deal/win/bust
-- See `docs/plan.md` → "Epic 5 — Sound & Haptics" for story details
+- **BF4 code review follow-ups** (fix items 1–4 before Epic 5; item 5 deferred):
+  1. (FIX — correctness risk) Export `FLIP_DURATION_MS = 450` from `FlippableCard.tsx`; import in `useResultFeedback.ts` replacing silent-copy `HOLE_CARD_FLIP_MS`
+  2. (CLEANUP) Remove dead `frontFace: {}` from `FlippableCard` styles; simplify JSX line to `style={frontStyle}`
+  3. (CLEANUP) Remove redundant `cancelAnimation(winFlash/bustFlash)` before `.value = 0` in `useResultFeedback.ts`
+  4. (CLEANUP) Simplify dep array `[round?.phase, round]` → `[round]` in `useResultFeedback.ts`
+  5. (DEFER — Rule of Three not met) Extract `buildFlashAnimation()` helper when a third flash path appears
+- Then **Epic 5** — Sound & Haptics (A5.1–A5.3)

@@ -1,16 +1,17 @@
-import { useLeaderboardStore } from './leaderboard-store';
-import { clearAllMMKVStores } from '../../__mocks__/react-native-mmkv';
+import { makeLeaderboardStore } from './leaderboard-store';
+import { FakeStorageAdapter } from '../testkit/fake-storage-adapter';
+
+let leaderboardStore: ReturnType<typeof makeLeaderboardStore>;
 
 beforeEach(() => {
-    clearAllMMKVStores();
-    useLeaderboardStore.setState({ sessions: [] });
+    leaderboardStore = makeLeaderboardStore(new FakeStorageAdapter());
 });
 
 describe('addSession', () => {
     it('adds a session with a prefixed id and ISO date', () => {
-        useLeaderboardStore.getState().addSession({ peak: 1500, endBalance: 1200 });
+        leaderboardStore.getState().addSession({ peak: 1500, endBalance: 1200 });
 
-        const { sessions } = useLeaderboardStore.getState();
+        const { sessions } = leaderboardStore.getState();
         expect(sessions).toHaveLength(1);
         expect(sessions[0]?.id).toMatch(/^session-/);
         expect(sessions[0]?.date).toMatch(/^\d{4}-\d{2}-\d{2}T/);
@@ -19,11 +20,11 @@ describe('addSession', () => {
     });
 
     it('sorts sessions by peak balance descending', () => {
-        useLeaderboardStore.getState().addSession({ peak: 1000, endBalance: 800 });
-        useLeaderboardStore.getState().addSession({ peak: 2000, endBalance: 1500 });
-        useLeaderboardStore.getState().addSession({ peak: 1500, endBalance: 1200 });
+        leaderboardStore.getState().addSession({ peak: 1000, endBalance: 800 });
+        leaderboardStore.getState().addSession({ peak: 2000, endBalance: 1500 });
+        leaderboardStore.getState().addSession({ peak: 1500, endBalance: 1200 });
 
-        const { sessions } = useLeaderboardStore.getState();
+        const { sessions } = leaderboardStore.getState();
         expect(sessions[0]?.peak).toBe(2000);
         expect(sessions[1]?.peak).toBe(1500);
         expect(sessions[2]?.peak).toBe(1000);
@@ -31,18 +32,17 @@ describe('addSession', () => {
 
     it('retains at most 20 sessions', () => {
         for (let i = 0; i < 25; i++) {
-            useLeaderboardStore.getState().addSession({ peak: 1000 + i, endBalance: 900 });
+            leaderboardStore.getState().addSession({ peak: 1000 + i, endBalance: 900 });
         }
 
-        expect(useLeaderboardStore.getState().sessions).toHaveLength(20);
+        expect(leaderboardStore.getState().sessions).toHaveLength(20);
     });
 
     it('keeps the 20 highest-peak sessions when trimming', () => {
         for (let i = 0; i < 25; i++) {
-            useLeaderboardStore.getState().addSession({ peak: 1000 + i, endBalance: 900 });
+            leaderboardStore.getState().addSession({ peak: 1000 + i, endBalance: 900 });
         }
 
-        // peaks 1000–1024 added; top 20 are 1005–1024
-        expect(useLeaderboardStore.getState().sessions.at(-1)?.peak).toBe(1005);
+        expect(leaderboardStore.getState().sessions.at(-1)?.peak).toBe(1005);
     });
 });

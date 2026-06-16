@@ -2,9 +2,9 @@ import type { JSX } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { Session } from '~/store';
 import { FullColumn } from '~/components/ui';
-import type { Session } from '~/store/leaderboard-store';
-import { useLeaderboardStore } from '~/store/leaderboard-store';
+import { useLeaderboardStore } from '~/store';
 
 export const LeaderboardScreen = (): JSX.Element => {
     const sessions = useLeaderboardStore((state) => state.sessions);
