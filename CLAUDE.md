@@ -44,11 +44,10 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 
 ## What's done
 - Epics 1–3 complete: full engine (E1–E10), app shell (A1–A4), table UI (A3.1–A3.9)
-- Epic 3 code review (2026-06-16) found 10 bugs documented in `docs/plan.md` under "Bug Fixes — Post-Epic-3"
+- Epic 3 code review (2026-06-16) found 10 bugs; all fixed in BF1–BF3 (2026-06-16)
+- BF1 insurance fix note: `insuranceTaken: true` is set on BOTH take and decline paths (prevents re-offer in `getLegalMoves`); payout discrimination uses `insuranceBet !== undefined` (only set on take). The plan's original BF1 test expectation that decline leaves `insuranceTaken: false` was the bug — code-review caught and corrected this.
+- 117 tests green: 103 engine (Vitest) + 14 app (Jest)
 
 ## What's next
-- **TASK BF1** — Insurance subsystem (4 interrelated bugs; fix first, highest priority)
-- **TASK BF2** — Persistence + split-hand rendering (2 bugs)
-- **TASK BF3** — Housekeeping (4 low-priority items)
-- Then **Epic 4** — Animations (A4.1–A4.5)
-- See `docs/plan.md` → "Bug Fixes — Post-Epic-3" for full details on each bug and the fix strategy
+- **Epic 4** — Animations (A4.1–A4.5): card deal, hole flip, win/bust feedback, chip tap, split
+- See `docs/plan.md` → "Epic 4 — Animations" for story details

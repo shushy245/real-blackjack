@@ -181,10 +181,10 @@ type LeaderboardStore = {
 8. Cash Out flow
 9. Leaderboard screen
 
-**Bug Fixes — Post-Epic-3 code review surfaced 10 bugs; fix all before Epic 4**
-1. Insurance subsystem (4 blocking bugs — fix together)
-2. Bust persistence + split-hand rendering (2 high-priority bugs)
-3. Housekeeping (4 low-priority — unused param, test leakage, sort tiebreaker, domain logic in UI)
+**Bug Fixes — Post-Epic-3 code review surfaced 10 bugs; fix all before Epic 4** ✅ DONE 2026-06-16
+1. Insurance subsystem (4 blocking bugs — fix together) ✅
+2. Bust persistence + split-hand rendering (2 high-priority bugs) ✅
+3. Housekeeping (4 low-priority — unused param, test leakage, sort tiebreaker, domain logic in UI) ✅
 
 **Epic 4 — Animations** (Reanimated 3 + Moti)
 1. Card deal: slide from shoe position to hand
@@ -540,7 +540,7 @@ All 10 bugs were found by a code-review over Epics 1–3 (2026-06-16). Fix all b
 
 ---
 
-**TASK BF1 — Insurance subsystem (4 interrelated blocking bugs)**
+**TASK BF1 — Insurance subsystem (4 interrelated blocking bugs)** ✅ DONE 2026-06-16
 
 All 4 touch the same feature; fix in one pass with TDD.
 
@@ -569,7 +569,7 @@ Test list (add to round.test.ts + payouts.test.ts, or new insurance.test.ts):
 
 ---
 
-**TASK BF2 — Persistence + split-hand rendering (2 high-priority bugs)**
+**TASK BF2 — Persistence + split-hand rendering (2 high-priority bugs)** ✅ DONE 2026-06-16
 
 Files: `packages/app/src/store/game-store.ts`, `packages/app/src/screens/table/TableLayout.tsx`
 
@@ -586,7 +586,7 @@ Bug 6 — Only active split hand rendered; other hands invisible (TableLayout.ts
 
 ---
 
-**TASK BF3 — Housekeeping (4 low-priority bugs)**
+**TASK BF3 — Housekeeping (4 low-priority bugs)** ✅ DONE 2026-06-16
 
 Files: `round.ts`, `__mocks__/react-native-mmkv.ts`, `leaderboard-store.ts`, `TableLayout.tsx`
 
