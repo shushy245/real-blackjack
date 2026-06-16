@@ -226,12 +226,12 @@ describe('applyRoundAction — Insurance', () => {
         expect(next.phase).toBe('player-action');
     });
 
-    it('declined (Stand as decline): insuranceTaken stays false, no insuranceBet, phase → player-action', () => {
+    it('declined (Stand as decline): insuranceTaken set true (prevents re-offer), no insuranceBet, phase → player-action', () => {
         const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.Three)]);
         const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Stand });
 
-        expect(next.insuranceTaken).toBe(false);
+        expect(next.insuranceTaken).toBe(true);
         expect(next.insuranceBet).toBeUndefined();
         expect(next.phase).toBe('player-action');
     });
@@ -249,14 +249,14 @@ describe('applyRoundAction — Insurance', () => {
         expect(next.insuranceBet).toBe(25);
     });
 
-    it('declining insurance when dealer has BJ: phase → settling with hole revealed, no insurance bet', () => {
+    it('declining insurance when dealer has BJ: phase → settling with hole revealed, insuranceTaken true, no insuranceBet', () => {
         const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
         const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Stand });
 
         expect(next.phase).toBe('settling');
         expect(next.holeCardRevealed).toBe(true);
-        expect(next.insuranceTaken).toBe(false);
+        expect(next.insuranceTaken).toBe(true);
         expect(next.insuranceBet).toBeUndefined();
     });
 });

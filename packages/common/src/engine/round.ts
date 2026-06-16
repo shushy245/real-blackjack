@@ -169,9 +169,9 @@ const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundSt
     }
 
     if (action.type === Move.Stand) {
-        if (dealerHasBJ) return { ...state, phase: 'settling', holeCardRevealed: true };
+        if (dealerHasBJ) return { ...state, phase: 'settling', holeCardRevealed: true, insuranceTaken: true };
 
-        return { ...state, phase: 'player-action' };
+        return { ...state, phase: 'player-action', insuranceTaken: true };
     }
 
     throw new Error(`applyRoundAction: ${action.type} is not legal in phase insurance-pending`);
