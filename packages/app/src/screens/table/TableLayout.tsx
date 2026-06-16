@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { TextStyle } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { HandResult, RoundState } from '@real-blackjack/common';
@@ -11,6 +12,7 @@ import { ActionBar } from '~/components/action-bar';
 import { BetControls } from '~/components/bet-controls';
 import { DealerHand, PlayerHand } from '~/components/hand';
 import { GAME_CONFIG, useGameStore } from '~/store/game-store';
+import { useResultFeedback } from '~/animations/useResultFeedback';
 
 const FELT = '#0D5C2E';
 const RAIL = '#2C1204';
@@ -221,6 +223,8 @@ type PlayerZonePanelProps = {
 };
 
 const PlayerZonePanel = ({ round, legalMoves, onMove }: PlayerZonePanelProps): JSX.Element => {
+    const { winFlashStyle, bustFlashStyle } = useResultFeedback(round);
+
     if (round === undefined) {
         return (
             <View style={styles.playerZone}>
@@ -233,6 +237,8 @@ const PlayerZonePanel = ({ round, legalMoves, onMove }: PlayerZonePanelProps): J
 
     return (
         <View style={styles.playerZone}>
+            <Animated.View style={[styles.flashOverlay, styles.flashGreen, winFlashStyle]} pointerEvents="none" />
+            <Animated.View style={[styles.flashOverlay, styles.flashRed, bustFlashStyle]} pointerEvents="none" />
             <View style={styles.handsRow}>
                 {round.playerHands.map((hand, i) => (
                     <View key={i} style={i === round.activeHandIndex ? undefined : styles.handInactive}>
@@ -346,7 +352,10 @@ const styles = StyleSheet.create({
     },
     newGameBtnText: { color: '#C4A44A', fontSize: 13, fontWeight: 'bold', letterSpacing: 3 },
 
-    playerZone: { flex: 4, alignItems: 'center', justifyContent: 'center', gap: 10 },
+    playerZone: { flex: 4, alignItems: 'center', justifyContent: 'center', gap: 10, overflow: 'hidden' },
+    flashOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+    flashGreen: { backgroundColor: '#2ECC71' },
+    flashRed: { backgroundColor: '#C01120' },
     handsRow: { flexDirection: 'row', gap: 12, justifyContent: 'center', alignItems: 'flex-end' },
     handInactive: { opacity: 0.45, transform: [{ scale: 0.88 }] },
 
