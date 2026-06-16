@@ -1,6 +1,8 @@
 import { useLeaderboardStore } from './leaderboard-store';
+import { clearAllMMKVStores } from '../../__mocks__/react-native-mmkv';
 
 beforeEach(() => {
+    clearAllMMKVStores();
     useLeaderboardStore.setState({ sessions: [] });
 });
 

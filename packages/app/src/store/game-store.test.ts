@@ -2,8 +2,10 @@ import { createGame } from '@real-blackjack/common';
 
 import { GAME_CONFIG, useGameStore } from './game-store';
 import { useLeaderboardStore } from './leaderboard-store';
+import { clearAllMMKVStores } from '../../__mocks__/react-native-mmkv';
 
 beforeEach(() => {
+    clearAllMMKVStores();
     useGameStore.setState({ gameState: createGame(GAME_CONFIG) });
     useLeaderboardStore.setState({ sessions: [] });
 });

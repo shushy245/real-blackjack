@@ -42,7 +42,7 @@ export const useLeaderboardStore = create<LeaderboardStore>()(
                         endBalance,
                     };
                     const updated = [...state.sessions, newSession]
-                        .sort((a, b) => b.peak - a.peak)
+                        .sort((a, b) => b.peak - a.peak || b.date.localeCompare(a.date))
                         .slice(0, MAX_SESSIONS);
 
                     return { sessions: updated };

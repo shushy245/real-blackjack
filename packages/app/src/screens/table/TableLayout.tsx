@@ -229,14 +229,17 @@ const PlayerZonePanel = ({ round, legalMoves, onMove }: PlayerZonePanelProps): J
         );
     }
 
-    const activeHand = round.playerHands[round.activeHandIndex];
-    if (activeHand === undefined) return <View style={styles.playerZone} />;
-
     const showActions = round.phase === 'player-action' || round.phase === 'insurance-pending';
 
     return (
         <View style={styles.playerZone}>
-            <PlayerHand cards={activeHand} hand={calculateHand(activeHand)} isBlackjack={isBlackjack(activeHand)} />
+            <View style={styles.handsRow}>
+                {round.playerHands.map((hand, i) => (
+                    <View key={i} style={i === round.activeHandIndex ? undefined : styles.handInactive}>
+                        <PlayerHand cards={hand} hand={calculateHand(hand)} isBlackjack={isBlackjack(hand)} />
+                    </View>
+                ))}
+            </View>
             {showActions && <ActionBar moves={legalMoves} phase={round.phase} onMove={onMove} />}
         </View>
     );
@@ -344,6 +347,8 @@ const styles = StyleSheet.create({
     newGameBtnText: { color: '#C4A44A', fontSize: 13, fontWeight: 'bold', letterSpacing: 3 },
 
     playerZone: { flex: 4, alignItems: 'center', justifyContent: 'center', gap: 10 },
+    handsRow: { flexDirection: 'row', gap: 12, justifyContent: 'center', alignItems: 'flex-end' },
+    handInactive: { opacity: 0.45, transform: [{ scale: 0.88 }] },
 
     zoneLabel: { color: 'rgba(196,164,74,0.2)', fontSize: 10, letterSpacing: 5 },
 

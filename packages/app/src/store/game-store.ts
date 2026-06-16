@@ -16,7 +16,7 @@ const readPersistedBalance = (): number => {
     if (raw === undefined) return GAME_CONFIG.startingBalance;
     const parsed = parseInt(raw, 10);
 
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : GAME_CONFIG.startingBalance;
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : GAME_CONFIG.startingBalance;
 };
 
 type GameStore = {
