@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 
@@ -115,10 +115,19 @@ type AnimatedChipProps = {
 
 const AnimatedChip = ({ denom, disabled, onChip }: AnimatedChipProps): JSX.Element => {
     const scale = useSharedValue(1);
+    const animating = useRef(false);
     const cfg = chipConfigMap[denom];
 
     const handlePress = (): void => {
-        scale.value = withSequence(withSpring(1.2, { damping: 8, stiffness: 300 }), withSpring(1));
+        if (!animating.current) {
+            animating.current = true;
+            scale.value = withSequence(
+                withSpring(1.2, { damping: 8, stiffness: 300 }),
+                withSpring(1, {}, () => {
+                    animating.current = false;
+                }),
+            );
+        }
         onChip(denom);
     };
 

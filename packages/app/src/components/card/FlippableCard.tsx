@@ -22,10 +22,12 @@ export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX
     }, [flipped, progress]);
 
     const backStyle = useAnimatedStyle(() => ({
+        opacity: progress.value < 0.5 ? 1 : 0,
         transform: [{ perspective: 1200 }, { rotateY: `${interpolate(progress.value, [0, 1], [0, Math.PI])}rad` }],
     }));
 
     const frontStyle = useAnimatedStyle(() => ({
+        opacity: progress.value >= 0.5 ? 1 : 0,
         transform: [{ perspective: 1200 }, { rotateY: `${interpolate(progress.value, [0, 1], [-Math.PI, 0])}rad` }],
     }));
 
@@ -44,9 +46,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backfaceVisibility: 'hidden',
     },
-    frontFace: {
-        backfaceVisibility: 'hidden',
-    },
+    frontFace: {},
 });

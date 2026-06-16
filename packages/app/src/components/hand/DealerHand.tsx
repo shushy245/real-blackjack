@@ -38,7 +38,7 @@ type DealerCardFanProps = { cards: readonly Card[]; holeRevealed: boolean };
 const DealerCardFan = ({ cards, holeRevealed }: DealerCardFanProps): JSX.Element => (
     <View style={styles.fan}>
         {cards.map((card, i) => (
-            <View key={`${card.rank}-${card.suit}`} style={i === 0 ? undefined : styles.cardOverlap}>
+            <View key={i} style={i === 0 ? undefined : styles.cardOverlap}>
                 <DealingCard>
                     {i === 1 ? (
                         <FlippableCard
