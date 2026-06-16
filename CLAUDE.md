@@ -3,7 +3,7 @@
 ## HARD RULES — read before every response that involves code
 **Never begin implementing a story unless explicitly asked in this session.**
 **At the start of every story: create a lightweight git tag `story/<name>` (e.g. `story/BF1`) before writing any code.**
-**After completing any story: run a single `/code-review high` over the full story diff (`git diff story/<name>..HEAD`). One review, all commits, before declaring the story done.**
+**After completing any story: run `/code-review high story/<name>` (e.g. `/code-review high story/BF2`). This produces one review over all commits since the tag. If the review comes back empty, re-run passing the resolved SHA instead.**
 **Commit directly to main after every green state — no branches.**
 **Read `docs/plan.md` in full before touching any code — it is the authoritative plan.**
 **Before ending any session: update "What's done" and "What's next" in this file, and mark completed tasks in `docs/plan.md`.**
@@ -46,8 +46,9 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - Epics 1–3 complete: full engine (E1–E10), app shell (A1–A4), table UI (A3.1–A3.9)
 - Epic 3 code review (2026-06-16) found 10 bugs; all fixed in BF1–BF3 (2026-06-16)
 - BF1 insurance fix note: `insuranceTaken: true` is set on BOTH take and decline paths (prevents re-offer in `getLegalMoves`); payout discrimination uses `insuranceBet !== undefined` (only set on take). The plan's original BF1 test expectation that decline leaves `insuranceTaken: false` was the bug — code-review caught and corrected this.
+- Epic 4 complete (2026-06-16): A4.1 deal slide (DealingCard/Moti), A4.2 hole-card flip (FlippableCard/Reanimated rotateY), A4.3 win/bust flash (useResultFeedback hook), A4.4 chip bounce (AnimatedChip withSequence spring), A4.5 split layout (LinearTransition + FadeIn)
 - 117 tests green: 103 engine (Vitest) + 14 app (Jest)
 
 ## What's next
-- **Epic 4** — Animations (A4.1–A4.5): card deal, hole flip, win/bust feedback, chip tap, split
-- See `docs/plan.md` → "Epic 4 — Animations" for story details
+- **Epic 5** — Sound & Haptics (A5.1–A5.3): expo-av setup, deal/flip/chip/win/bust sounds, expo-haptics on deal/win/bust
+- See `docs/plan.md` → "Epic 5 — Sound & Haptics" for story details

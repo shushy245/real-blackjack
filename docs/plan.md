@@ -186,12 +186,12 @@ type LeaderboardStore = {
 2. Bust persistence + split-hand rendering (2 high-priority bugs) ✅
 3. Housekeeping (4 low-priority — unused param, test leakage, sort tiebreaker, domain logic in UI) ✅
 
-**Epic 4 — Animations** (Reanimated 3 + Moti)
-1. Card deal: slide from shoe position to hand
-2. Hole card flip: rotateY reveal (face swap at 90°)
-3. Win/bust visual feedback (flash + chip movement)
-4. Chip tap animation (stack builds visually)
-5. Split animation (cards separate to two positions)
+**Epic 4 — Animations** (Reanimated 3 + Moti) ✅ DONE 2026-06-16
+1. Card deal: slide from shoe position to hand ✅
+2. Hole card flip: rotateY reveal (face swap at 90°) ✅
+3. Win/bust visual feedback (flash + chip movement) ✅
+4. Chip tap animation (stack builds visually) ✅
+5. Split animation (cards separate to two positions) ✅
 
 **Epic 5 — Sound & Haptics**
 1. expo-av setup + sound loading hook
@@ -597,13 +597,13 @@ Files: `round.ts`, `__mocks__/react-native-mmkv.ts`, `leaderboard-store.ts`, `Ta
 
 ---
 
-### Epic 4 — Animations
+### Epic 4 — Animations ✅ DONE 2026-06-16
 
-- **A4.1** — Card deal: cards slide from shoe position (top-right) to hand positions with spring easing
-- **A4.2** — Hole card flip: rotateY 0° → 180°; face-back image swapped at 90° mid-flip
-- **A4.3** — Win feedback: green pulse on player area + chips animate toward player; Bust: red flash
-- **A4.4** — Chip tap: chip bounces into stack with spring; stack height animates up
-- **A4.5** — Split: two cards spread horizontally to new hand positions with position animation
+- **A4.1** ✅ — Card deal: cards slide from shoe position (top-right) to hand positions with spring easing
+- **A4.2** ✅ — Hole card flip: rotateY 0° → 180°; face-back image swapped at 90° mid-flip
+- **A4.3** ✅ — Win feedback: green pulse on player area + chips animate toward player; Bust: red flash
+- **A4.4** ✅ — Chip tap: chip bounces into stack with spring; stack height animates up
+- **A4.5** ✅ — Split: two cards spread horizontally to new hand positions with position animation
 
 ### Epic 5 — Sound & Haptics
 
