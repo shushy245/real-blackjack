@@ -3,7 +3,7 @@ import type { TextStyle } from 'react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Card, HandValue } from '@real-blackjack/common';
 
-import { CardView, DealingCard } from '~/components/card';
+import { CardView, DealingCard, FlippableCard } from '~/components/card';
 
 import {
     CARD_HEIGHT,
@@ -37,17 +37,21 @@ type DealerCardFanProps = { cards: readonly Card[]; holeRevealed: boolean };
 
 const DealerCardFan = ({ cards, holeRevealed }: DealerCardFanProps): JSX.Element => (
     <View style={styles.fan}>
-        {cards.map((card, i) => {
-            const face = i === 1 && !holeRevealed ? 'down' : 'up';
-
-            return (
-                <View key={`${card.rank}-${card.suit}`} style={i === 0 ? undefined : styles.cardOverlap}>
-                    <DealingCard>
-                        <CardView card={card} face={face} width={CARD_WIDTH} />
-                    </DealingCard>
-                </View>
-            );
-        })}
+        {cards.map((card, i) => (
+            <View key={`${card.rank}-${card.suit}`} style={i === 0 ? undefined : styles.cardOverlap}>
+                <DealingCard>
+                    {i === 1 ? (
+                        <FlippableCard
+                            front={<CardView card={card} face="up" width={CARD_WIDTH} />}
+                            back={<CardView card={card} face="down" width={CARD_WIDTH} />}
+                            flipped={holeRevealed}
+                        />
+                    ) : (
+                        <CardView card={card} face="up" width={CARD_WIDTH} />
+                    )}
+                </DealingCard>
+            </View>
+        ))}
     </View>
 );
 
