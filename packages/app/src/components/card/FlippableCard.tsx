@@ -9,12 +9,14 @@ type FlippableCardProps = {
     flipped: boolean;
 };
 
+export const FLIP_DURATION_MS = 450;
+
 export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX.Element => {
     const progress = useSharedValue(flipped ? 1 : 0);
 
     useEffect(() => {
         if (flipped) {
-            progress.value = withTiming(1, { duration: 450 });
+            progress.value = withTiming(1, { duration: FLIP_DURATION_MS });
 
             return;
         }
@@ -34,7 +36,7 @@ export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX
     return (
         <View>
             <Animated.View style={[styles.backFace, backStyle]}>{back}</Animated.View>
-            <Animated.View style={[styles.frontFace, frontStyle]}>{front}</Animated.View>
+            <Animated.View style={frontStyle}>{front}</Animated.View>
         </View>
     );
 };
@@ -47,5 +49,4 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
     },
-    frontFace: {},
 });
