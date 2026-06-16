@@ -17,7 +17,7 @@ const shoeWith = (cards: Card[]): Shoe => ({
 describe('createRound — deal phase', () => {
     it('player has 2 cards and dealer has 2 cards after deal', () => {
         const shoe = createShoe(createRng(42));
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.playerHands[0]).toHaveLength(2);
         expect(round.dealerCards).toHaveLength(2);
@@ -26,14 +26,14 @@ describe('createRound — deal phase', () => {
     it('shoe has 4 fewer cards after deal', () => {
         const shoe = createShoe(createRng(42));
         const before = shoe.cards.length;
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.shoe.cards.length).toBe(before - 4);
     });
 
     it('hole card is not revealed after deal', () => {
         const shoe = createShoe(createRng(42));
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.holeCardRevealed).toBe(false);
     });
@@ -41,7 +41,7 @@ describe('createRound — deal phase', () => {
     it('phase is player-action when neither player nor dealer has blackjack', () => {
         // 7♠ 6♠ 9♠ K♠ → player: 7,9 (16) | dealer: 6,K (16) — no BJ
         const shoe = shoeWith([card(Rank.Seven), card(Rank.Six), card(Rank.Nine), card(Rank.King)]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('player-action');
     });
@@ -49,7 +49,7 @@ describe('createRound — deal phase', () => {
     it('phase is settling when player has blackjack and dealer up card is not Ace or 10-value', () => {
         // A♠ 6♠ K♠ 9♠ → player: A,K (BJ) | dealer up: 6 — peek finds no BJ → settle
         const shoe = shoeWith([card(Rank.Ace), card(Rank.Six), card(Rank.King), card(Rank.Nine)]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('settling');
     });
@@ -57,7 +57,7 @@ describe('createRound — deal phase', () => {
     it('hole card is revealed when player has blackjack and round goes directly to settling', () => {
         // A♠ 6♠ K♠ 9♠ → player: A,K (BJ) | dealer up: 6 — holeCard must be face-up at settlement
         const shoe = shoeWith([card(Rank.Ace), card(Rank.Six), card(Rank.King), card(Rank.Nine)]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.holeCardRevealed).toBe(true);
     });
@@ -70,7 +70,7 @@ describe('createRound — deal phase', () => {
             card(Rank.King),
             card(Rank.Nine),
         ]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('insurance-pending');
     });
@@ -78,9 +78,18 @@ describe('createRound — deal phase', () => {
     it('phase is settling when dealer has blackjack and up card is not Ace (peek reveals BJ)', () => {
         // 7♠ K♠ 9♠ A♠ → player: 7,9 (16) | dealer: K(up),A(hole) — peek finds BJ → settle
         const shoe = shoeWith([card(Rank.Seven), card(Rank.King), card(Rank.Nine), card(Rank.Ace)]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('settling');
+    });
+
+    it('phase is insurance-pending when dealer shows Ace and has BJ in hole (insurance offered first)', () => {
+        // 7♠ A♥ 9♠ K♠ → player: 7,9 (16) | dealer: A(up),K(hole)=BJ — must offer insurance first
+        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
+        const round = createRound(50, 500, shoe);
+
+        expect(round.phase).toBe('insurance-pending');
+        expect(round.holeCardRevealed).toBe(false);
     });
 });
 
@@ -89,7 +98,7 @@ const actionRound = (extraCards: Card[], balance = 500, bet = 50) => {
     // first 4 cards: player gets 7,9 (hard 16); dealer gets 6 (up), K (hole) — no BJ, player-action
     const shoe = shoeWith([card(Rank.Seven), card(Rank.Six), card(Rank.Nine), card(Rank.King), ...extraCards]);
 
-    return createRound(bet, balance, shoe, createRng(42));
+    return createRound(bet, balance, shoe);
 };
 
 describe('applyRoundAction — Hit', () => {
@@ -177,7 +186,7 @@ describe('applyRoundAction — Split', () => {
             card(Rank.Three), // card dealt to first split hand
             card(Rank.Four), // card dealt to second split hand
         ]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Split });
 
         expect(next.playerHands).toHaveLength(2);
@@ -206,7 +215,7 @@ describe('applyRoundAction — Split', () => {
 describe('applyRoundAction — Insurance', () => {
     it('accepted: deducts half bet from balance, sets insuranceBet, marks taken, moves to player-action', () => {
         const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.Three)]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('insurance-pending');
         const next = applyRoundAction(round, { type: Move.Insurance });
@@ -217,14 +226,38 @@ describe('applyRoundAction — Insurance', () => {
         expect(next.phase).toBe('player-action');
     });
 
-    it('declined (Stand as decline): marks insuranceTaken, moves to player-action', () => {
+    it('declined (Stand as decline): insuranceTaken stays false, no insuranceBet, phase → player-action', () => {
         const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.Three)]);
-        const round = createRound(50, 500, shoe, createRng(42));
+        const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Stand });
 
-        expect(next.insuranceTaken).toBe(true);
+        expect(next.insuranceTaken).toBe(false);
         expect(next.insuranceBet).toBeUndefined();
         expect(next.phase).toBe('player-action');
+    });
+
+    it('accepting insurance when dealer has BJ: phase → settling with hole revealed', () => {
+        // dealer A(up)+K(hole)=BJ; player takes insurance → immediate settle
+        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
+        const round = createRound(50, 500, shoe);
+        expect(round.phase).toBe('insurance-pending');
+        const next = applyRoundAction(round, { type: Move.Insurance });
+
+        expect(next.phase).toBe('settling');
+        expect(next.holeCardRevealed).toBe(true);
+        expect(next.insuranceTaken).toBe(true);
+        expect(next.insuranceBet).toBe(25);
+    });
+
+    it('declining insurance when dealer has BJ: phase → settling with hole revealed, no insurance bet', () => {
+        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
+        const round = createRound(50, 500, shoe);
+        const next = applyRoundAction(round, { type: Move.Stand });
+
+        expect(next.phase).toBe('settling');
+        expect(next.holeCardRevealed).toBe(true);
+        expect(next.insuranceTaken).toBe(false);
+        expect(next.insuranceBet).toBeUndefined();
     });
 });
 

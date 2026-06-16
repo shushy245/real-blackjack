@@ -2,6 +2,7 @@ import { Move, Rank } from './types';
 import { type RoundState } from './round';
 
 export const getLegalMoves = (state: RoundState): Move[] => {
+    if (state.phase === 'insurance-pending') return [Move.Insurance, Move.Stand];
     if (state.phase !== 'player-action') return [];
 
     const activeHand = state.playerHands[state.activeHandIndex];

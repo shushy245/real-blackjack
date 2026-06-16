@@ -1,4 +1,3 @@
-import { type Rng } from './rng';
 import { shouldDealerHit } from './dealer';
 import { type Shoe, dealCard } from './shoe';
 import { getLegalMoves } from './legal-moves';
@@ -35,12 +34,8 @@ const resolveInitialPhase = (
     const dealerUpIsAce = dealerUpCard.rank === Rank.Ace;
     const dealerUpIsTenValue = TEN_VALUE_RANKS.has(dealerUpCard.rank);
 
-    if (dealerUpIsAce) {
-        const dealerBJ = TEN_VALUE_RANKS.has(dealerHoleCard.rank);
-        if (dealerBJ) return { phase: 'settling', holeCardRevealed: true };
-
-        return { phase: 'insurance-pending', holeCardRevealed: false };
-    }
+    // Dealer shows Ace: always offer insurance first, regardless of hole card
+    if (dealerUpIsAce) return { phase: 'insurance-pending', holeCardRevealed: false };
 
     if (dealerUpIsTenValue) {
         const dealerBJ = dealerHoleCard.rank === Rank.Ace;
@@ -52,7 +47,7 @@ const resolveInitialPhase = (
     return { phase: 'player-action', holeCardRevealed: false };
 };
 
-export const createRound = (bet: number, balance: number, shoe: Shoe, _rng: Rng): RoundState => {
+export const createRound = (bet: number, balance: number, shoe: Shoe): RoundState => {
     const [p1, shoe1] = dealCard(shoe);
     const [d1, shoe2] = dealCard(shoe1);
     const [p2, shoe3] = dealCard(shoe2);
@@ -157,20 +152,26 @@ const applySplit = (state: RoundState): RoundState => {
 };
 
 const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundState => {
+    const dealerHasBJ = isBlackjack(state.dealerCards);
+
     if (action.type === Move.Insurance) {
         const insuranceBet = Math.floor(state.originalBet / 2);
-
-        return {
+        const base: RoundState = {
             ...state,
-            phase: 'player-action',
             insuranceBet,
             balance: state.balance - insuranceBet,
             insuranceTaken: true,
         };
+
+        if (dealerHasBJ) return { ...base, phase: 'settling', holeCardRevealed: true };
+
+        return { ...base, phase: 'player-action' };
     }
 
     if (action.type === Move.Stand) {
-        return { ...state, phase: 'player-action', insuranceTaken: true };
+        if (dealerHasBJ) return { ...state, phase: 'settling', holeCardRevealed: true };
+
+        return { ...state, phase: 'player-action' };
     }
 
     throw new Error(`applyRoundAction: ${action.type} is not legal in phase insurance-pending`);

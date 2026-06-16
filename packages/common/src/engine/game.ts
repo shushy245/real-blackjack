@@ -54,7 +54,7 @@ const applyPlaceBet = (game: GameState, amount: number): GameState => {
 
     const shoe = needsReshuffle(game.shoe) ? reshuffleShoe(game.shoe, game.rng) : game.shoe;
     const balance = game.balance - amount;
-    const round = createRound(amount, balance, shoe, game.rng);
+    const round = createRound(amount, balance, shoe);
 
     return { ...game, shoe: round.shoe, balance, round };
 };

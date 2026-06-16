@@ -124,9 +124,15 @@ describe('getLegalMoves', () => {
         expect(moves).not.toContain(Move.Insurance);
     });
 
-    it('returns empty array when phase is not player-action', () => {
+    it('returns empty array when phase is not player-action or insurance-pending', () => {
         const state: RoundState = { ...baseState(), phase: 'dealer-turn' };
 
         expect(getLegalMoves(state)).toEqual([]);
+    });
+
+    it('returns [Insurance, Stand] when phase is insurance-pending', () => {
+        const state: RoundState = { ...baseState(), phase: 'insurance-pending' };
+
+        expect(getLegalMoves(state)).toEqual([Move.Insurance, Move.Stand]);
     });
 });

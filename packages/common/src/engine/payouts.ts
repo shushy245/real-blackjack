@@ -15,13 +15,13 @@ const settleHand = (
     bet: number,
     dealerBJ: boolean,
     dealerHandValue: ReturnType<typeof calculateHand>,
-    insuranceTaken: boolean,
+    insuranceBet: number | undefined,
 ): HandResult => {
     const playerHand = calculateHand(hand);
     const playerBJ = isBlackjack(hand);
 
-    // Insurance taken + dealer BJ: original bet pushes (insurance profit handled separately)
-    if (dealerBJ && insuranceTaken && !playerBJ) return { handIndex, outcome: 'push', payout: 0 };
+    // Insurance taken + dealer BJ: main bet loses; insurance payout (insuranceDelta) covers the loss
+    if (dealerBJ && insuranceBet !== undefined && !playerBJ) return { handIndex, outcome: 'lose', payout: -bet };
 
     if (isBust(playerHand)) return { handIndex, outcome: 'lose', payout: -bet };
 
@@ -48,7 +48,7 @@ export const settleRound = (state: RoundState): { netDelta: number; handResults:
     const handResults: HandResult[] = state.playerHands.map((hand, i) => {
         const bet = state.handBets[i] ?? state.originalBet;
 
-        return settleHand(hand, i, bet, dealerBJ, dealerHandValue, state.insuranceTaken);
+        return settleHand(hand, i, bet, dealerBJ, dealerHandValue, state.insuranceBet);
     });
 
     const insuranceDelta =
