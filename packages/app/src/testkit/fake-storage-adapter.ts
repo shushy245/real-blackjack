@@ -14,8 +14,4 @@ export class FakeStorageAdapter implements StoragePort {
     async removeItem(key: string): Promise<void> {
         this.store.delete(key);
     }
-
-    clear(): void {
-        this.store.clear();
-    }
 }

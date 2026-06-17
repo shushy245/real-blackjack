@@ -22,6 +22,16 @@ describe('initial state', () => {
     it('starts with no active round', () => {
         expect(gameStore.getState().gameState.round).toBeUndefined();
     });
+
+    it('restores persisted balance when initialBalance is provided', () => {
+        const restoredStore = makeGameStore({
+            storage: new FakeStorageAdapter(),
+            initialBalance: 750,
+            onSessionEnd: () => {},
+        });
+
+        expect(restoredStore.getState().gameState.balance).toBe(750);
+    });
 });
 
 describe('action', () => {

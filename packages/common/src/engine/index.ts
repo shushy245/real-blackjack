@@ -14,3 +14,4 @@ export type { Rng } from './rng';
 export { createRng, shuffle } from './rng';
 export type { Card } from './types';
 export { Move, Rank, Suit } from './types';
+export { generateUniqueId } from '../utils/generate-unique-id';

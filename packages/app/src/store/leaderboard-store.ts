@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { generateUniqueId } from '@real-blackjack/common';
 import type { Mutate, StoreApi, UseBoundStore } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -36,7 +37,7 @@ export const makeLeaderboardStore = (storage: StoragePort): LeaderboardStoreHook
                 addSession: ({ peak, endBalance }) =>
                     set((state) => {
                         const newSession: Session = {
-                            id: `session-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+                            id: generateUniqueId('session'),
                             date: new Date().toISOString(),
                             peak,
                             endBalance,

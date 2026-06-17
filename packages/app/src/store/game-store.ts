@@ -7,7 +7,7 @@ import type { StoragePort } from './storage.port';
 
 export const GAME_CONFIG = { startingBalance: 1000, minBet: 10, maxBet: 1000 } as const;
 
-const BALANCE_KEY = 'game.balance';
+export const BALANCE_KEY = 'game.balance';
 
 type GameStoreState = {
     readonly gameState: GameState;
@@ -19,25 +19,30 @@ type GameStoreState = {
 
 type GameStoreDeps = {
     storage: StoragePort;
+    initialBalance?: number;
     onSessionEnd: (params: { peak: number; endBalance: number }) => void;
 };
 
-export const makeGameStore = ({ storage, onSessionEnd }: GameStoreDeps): UseBoundStore<StoreApi<GameStoreState>> => {
+export const makeGameStore = ({
+    storage,
+    initialBalance,
+    onSessionEnd,
+}: GameStoreDeps): UseBoundStore<StoreApi<GameStoreState>> => {
+    const startingBalance = initialBalance ?? GAME_CONFIG.startingBalance;
+
     const store = create<GameStoreState>()((set, get) => ({
-        gameState: createGame(GAME_CONFIG),
+        gameState: createGame({ ...GAME_CONFIG, startingBalance }),
         lastBet: 0,
 
         action: (move: GameAction) =>
             set((state) => {
-                let gameState = applyAction(state.gameState, move);
-                if (gameState.round?.phase === 'dealer-turn') {
-                    gameState = applyAction(gameState, { type: 'RunDealerTurn' });
-                }
+                const afterMove = applyAction(state.gameState, move);
+                const gameState =
+                    afterMove.round?.phase === 'dealer-turn'
+                        ? applyAction(afterMove, { type: 'RunDealerTurn' })
+                        : afterMove;
 
-                return {
-                    gameState,
-                    lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet,
-                };
+                return { gameState, lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet };
             }),
 
         newGame: () => set({ gameState: createGame(GAME_CONFIG), lastBet: 0 }),
@@ -49,15 +54,11 @@ export const makeGameStore = ({ storage, onSessionEnd }: GameStoreDeps): UseBoun
         },
     }));
 
-    storage.getItem(BALANCE_KEY).then((raw) => {
-        if (raw === undefined) return;
-        const parsed = parseInt(raw, 10);
-        if (!Number.isFinite(parsed) || parsed < 0) return;
-        store.setState({ gameState: createGame({ ...GAME_CONFIG, startingBalance: parsed }) });
-    });
-
     store.subscribe((state) => {
-        storage.setItem(BALANCE_KEY, state.gameState.balance.toString());
+        storage.setItem(BALANCE_KEY, state.gameState.balance.toString()).catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error('game-store: failed to persist balance', err);
+        });
     });
 
     return store;
