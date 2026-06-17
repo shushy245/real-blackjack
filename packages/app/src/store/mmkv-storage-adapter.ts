@@ -5,6 +5,10 @@ import type { StoragePort } from './storage.port';
 export class MmkvStorageAdapter implements StoragePort {
     constructor(private readonly mmkv: MMKV) {}
 
+    readSync(key: string): string | undefined {
+        return this.mmkv.getString(key);
+    }
+
     async getItem(key: string): Promise<string | undefined> {
         return this.mmkv.getString(key);
     }

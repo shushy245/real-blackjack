@@ -28,7 +28,10 @@ export const makeGameStore = ({
     initialBalance,
     onSessionEnd,
 }: GameStoreDeps): UseBoundStore<StoreApi<GameStoreState>> => {
-    const startingBalance = initialBalance ?? GAME_CONFIG.startingBalance;
+    const startingBalance =
+        initialBalance !== undefined && Number.isFinite(initialBalance) && initialBalance > 0
+            ? initialBalance
+            : GAME_CONFIG.startingBalance;
 
     const store = create<GameStoreState>()((set, get) => ({
         gameState: createGame({ ...GAME_CONFIG, startingBalance }),
