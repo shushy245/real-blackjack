@@ -41,10 +41,10 @@
 - **One-handed:** tap-to-add chip UX is thumb-friendly by design
 
 ### Tech Stack
-- **Framework:** Expo SDK 52 · Expo Router (file-based navigation)
-- **Build & distribution:** EAS Build (cloud); Dev Client for dev workflow (Expo Go won't work — MMKV requires custom native)
+- **Framework:** Expo SDK 54 · Expo Router (file-based navigation)
+- **Build & distribution:** EAS Build (cloud); Expo Go for dev (uses in-memory storage fallback — MMKV is native-only)
 - **Distribution:** Android APK sideload (EAS Build free tier, share .apk link); iOS when Apple Developer account acquired
-- **Animation:** React Native Reanimated 3 + Moti
+- **Animation:** React Native Reanimated 4 + Moti
 - **State:** Zustand with MMKV persist adapter (`react-native-mmkv`)
 - **Engine tests:** Vitest (pure TypeScript, no DOM/RN deps)
 - **Component tests:** jest-expo preset + React Native Testing Library (RNTL)

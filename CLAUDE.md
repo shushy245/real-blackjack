@@ -15,7 +15,7 @@
 Single-player Blackjack — player vs dealer — iOS + Android from one codebase.
 
 - `packages/common` — pure TypeScript game engine + shared types (no RN deps; Vitest-tested)
-- `packages/app` — Expo SDK 52 React Native app (Expo Router, Reanimated 3, Zustand, MMKV)
+- `packages/app` — Expo SDK 54 React Native app (Expo Router, Reanimated 4, Zustand, MMKV)
 
 `packages/backend` and `packages/frontend` (web scaffold) are **deleted** in Task A1.
 
@@ -26,7 +26,7 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - **State:** Zustand with `react-native-mmkv` persist adapter. Two stores: `GameStore` (game state + session peak) and `LeaderboardStore` (session history, top 20).
 - **Navigation:** Expo Router (file-based). Two screens: `app/index.tsx` (table) + `app/leaderboard.tsx`.
 - **Layout:** `Box`, `Row`, `Column`, `FullBox`, `FullRow`, `FullColumn` RN primitives (`View` + `StyleSheet`) — no raw Views with layout styles, no inline styles.
-- **Animations:** React Native Reanimated 3 + Moti — runs on native thread.
+- **Animations:** React Native Reanimated 4 + Moti — runs on native thread.
 - **Testing:** Vitest for engine (common); jest-expo + RNTL for components (app). This is the one intentional divergence from global CLAUDE.md's Vitest preference — Metro + Jest is the standard RN toolchain.
 
 ## Key conventions (project-specific)
@@ -44,6 +44,9 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - BF4 code review (2026-06-16) found 5 follow-up items; all fixed in story/BF4-review (2026-06-16), commit 92df8e6
   - FLIP_DURATION_MS extracted to `animations/constants.ts` (direct animations→components import triggered eslint-plugin-import/no-cycle null-traversal crash; neutral constants file avoids it)
 - 117 tests green: 103 engine (Vitest) + 14 app (Jest)
+- SD1 complete (2026-06-17): downgraded from SDK 56 to SDK 54 (RN 0.81.5, React 19.1, Reanimated 4.1, expo-router 6.0, TS 5.9); 117 tests green, typecheck clean
 
 ## What's next
-- **Epic 5** — Sound & Haptics (A5.1–A5.3)
+- **SD2** — Expo Go storage compatibility (in-memory fallback for MMKV)
+- Then **CQ1** — code quality audit (both packages)
+- Then **Epic 5** — Sound & Haptics (A5.1–A5.3)
