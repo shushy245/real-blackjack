@@ -23,7 +23,7 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - **Engine** lives entirely in `packages/common/src/engine/` — pure functions, zero framework deps, fully unit-tested with Vitest. Single source of truth for all game logic.
 - **Solver seam:** `getState(game)` + `getLegalMoves(game)` exported from engine `index.ts`. Future LLM advisor plugs in here without touching engine internals.
 - **App** (`packages/app`) wraps the engine via a Zustand `GameStore`. UI reads store state; user actions call `store.action(move)` which calls `engine.applyAction()`.
-- **State:** Zustand with `react-native-mmkv` persist adapter. Two stores: `GameStore` (game state + session peak) and `LeaderboardStore` (session history, top 20). Expo Go uses an in-memory `StorageAdapter` fallback (detected via `Constants.appOwnership === 'expo'`); MMKV is used in EAS builds.
+- **State:** Zustand with `react-native-mmkv` persist adapter. Two stores: `GameStore` (game state + session peak) and `LeaderboardStore` (session history, top 20). Expo Go uses `MemoryStorageAdapter` (detected via `ExecutionEnvironment.StoreClient`); MMKV is used in all other builds.
 - **Navigation:** Expo Router (file-based). Two screens: `app/index.tsx` (table) + `app/leaderboard.tsx`.
 - **Layout:** `Box`, `Row`, `Column`, `FullBox`, `FullRow`, `FullColumn` RN primitives (`View` + `StyleSheet`) — no raw Views with layout styles, no inline styles.
 - **Animations:** React Native Reanimated 4 + Moti — runs on native thread.
@@ -43,10 +43,10 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - Epic 4 code review (2026-06-16) found 6 bugs; all fixed in BF4 (2026-06-16), commit 5c6b704
 - BF4 code review (2026-06-16) found 5 follow-up items; all fixed in story/BF4-review (2026-06-16), commit 92df8e6
   - FLIP_DURATION_MS extracted to `animations/constants.ts` (direct animations→components import triggered eslint-plugin-import/no-cycle null-traversal crash; neutral constants file avoids it)
-- 117 tests green: 103 engine (Vitest) + 14 app (Jest)
-- SD1 complete (2026-06-17): downgraded from SDK 56 to SDK 54 (RN 0.81.5, React 19.1, Reanimated 4.1, expo-router 6.0, TS 5.9); 117 tests green, typecheck clean
-- SD2 complete (2026-06-17): in-memory `StorageAdapter` fallback in `storage.ts` — activated when `Constants.appOwnership === 'expo'`; MMKV used in all other builds
+- SD1 complete (2026-06-17): downgraded from SDK 56 to SDK 54 (RN 0.81.5, React 19.1, Reanimated 4.1, expo-router 6.0, TS 5.9)
+- SD2 complete (2026-06-17): in-memory `MemoryStorageAdapter` for Expo Go (`ExecutionEnvironment.StoreClient`)
+- BF5 complete (2026-06-18): MMKV wiring, async race fix, const-only action, session ID, dead code removal
+- BF5-review complete (2026-06-18): Expo Go crash fix, $0 balance guard, factory validation, port bypass; 118 tests green: 103 engine (Vitest) + 15 app (Jest)
 
 ## What's next
-- **CQ1** — code quality audit (both packages); findings become BF5 tasks
-- Then **Epic 5** — Sound & Haptics (A5.1–A5.3)
+- **Epic 5** — Sound & Haptics (A5.1–A5.3)
