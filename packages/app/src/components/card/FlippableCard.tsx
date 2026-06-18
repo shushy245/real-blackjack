@@ -3,6 +3,8 @@ import type { JSX, ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { useSoundEffects } from '~/sounds';
+
 import { FLIP_DURATION_MS } from '../../animations/constants';
 
 type FlippableCardProps = {
@@ -13,9 +15,11 @@ type FlippableCardProps = {
 
 export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX.Element => {
     const progress = useSharedValue(flipped ? 1 : 0);
+    const sounds = useSoundEffects();
 
     useEffect(() => {
         if (flipped) {
+            sounds.flip();
             progress.value = withTiming(1, { duration: FLIP_DURATION_MS });
 
             return;

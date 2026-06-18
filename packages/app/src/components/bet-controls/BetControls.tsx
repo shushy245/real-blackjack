@@ -3,6 +3,8 @@ import { useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 
+import { useSoundEffects } from '~/sounds';
+
 import { CHIP_DENOMINATIONS, type ChipDenomination, clampBet, chipConfigMap, formatAmount } from './BetControls.utils';
 
 type BetControlsProps = {
@@ -117,8 +119,10 @@ const AnimatedChip = ({ denom, disabled, onChip }: AnimatedChipProps): JSX.Eleme
     const scale = useSharedValue(1);
     const animating = useRef(false);
     const cfg = chipConfigMap[denom];
+    const sounds = useSoundEffects();
 
     const handlePress = (): void => {
+        sounds.chip();
         if (!animating.current) {
             animating.current = true;
             scale.value = withSequence(

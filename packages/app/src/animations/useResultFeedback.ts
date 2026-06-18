@@ -5,6 +5,8 @@ import type { RoundState } from '@real-blackjack/common';
 import type { AnimatedStyle } from 'react-native-reanimated';
 import { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 
+import { useSoundEffects } from '~/sounds';
+
 import { FLIP_DURATION_MS } from './constants';
 
 type ResultFeedbackStyles = {
@@ -26,6 +28,7 @@ export const useResultFeedback = (round: RoundState | undefined): ResultFeedback
     const prevPhaseRef = useRef(round?.phase);
     const winFlash = useSharedValue(0);
     const bustFlash = useSharedValue(0);
+    const sounds = useSoundEffects();
 
     useEffect(() => {
         const phase = round?.phase;
@@ -46,8 +49,10 @@ export const useResultFeedback = (round: RoundState | undefined): ResultFeedback
         const { netDelta } = settleRound(round);
 
         if (netDelta > 0) {
+            sounds.win();
             winFlash.value = buildFlashAnimation();
         } else if (netDelta < 0) {
+            sounds.bust();
             bustFlash.value = buildFlashAnimation();
         }
     }, [round]);
