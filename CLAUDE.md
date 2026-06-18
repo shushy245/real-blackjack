@@ -49,6 +49,7 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - BF5-review complete (2026-06-18): Expo Go crash fix, $0 balance guard, factory validation, port bypass; 118 tests green: 103 engine (Vitest) + 15 app (Jest)
 - Epic 5 complete (2026-06-18): A5.1 SoundsProvider context (expo-av, 5 assets), A5.2 sound events wired (deal/flip/chip/win/bust), A5.3 haptics wired (deal/win/bust); 128 tests green: 103 engine + 25 app
 - A5-review complete (2026-06-18): null→undefined (5 useRef calls), 4 as-casts removed (typed mock helpers added), eslint-disable rule name corrected
+- CQ1 complete (2026-06-19): max-effort code quality audit of both packages; 15 findings written as BF6 tasks in `docs/plan.md`
 
 ## What's next
-- **All planned epics complete.** Plan new features (EAS Build / distribution, Game Over screen, advisor, etc.) before writing code.
+- **BF6** — 15 audit findings from CQ1 (see `docs/plan.md` Story BF6). Fix before shipping. Top-priority: BF6-1 (split-ace blackjack overpays 3:2 instead of 1:1), BF6-2 (game-over sessions lost from leaderboard), BF6-3 (split without balance guard).
