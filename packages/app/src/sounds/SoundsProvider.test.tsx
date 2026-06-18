@@ -4,13 +4,13 @@ import * as Haptics from 'expo-haptics';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { SoundsProvider, useSoundEffects } from './SoundsProvider';
-
-type MockSound = { replayAsync: jest.Mock; unloadAsync: jest.Mock };
+import { clearCreatedSounds, getCreatedSounds } from '../../__mocks__/expo-av';
 
 const wrapper = ({ children }: { children: ReactNode }) => <SoundsProvider>{children}</SoundsProvider>;
 
 beforeEach(() => {
     jest.clearAllMocks();
+    clearCreatedSounds();
 });
 
 const waitForSoundsLoaded = () =>
@@ -18,11 +18,11 @@ const waitForSoundsLoaded = () =>
         expect(Audio.Sound.createAsync).toHaveBeenCalledTimes(5);
     });
 
-const getMockSound = async (index: number): Promise<MockSound> => {
-    const result = (Audio.Sound.createAsync as jest.Mock).mock.results[index];
-    if (result === undefined) throw new Error(`createAsync result[${index}] is undefined`);
+const getMockSound = (index: number) => {
+    const sound = getCreatedSounds()[index];
+    if (sound === undefined) throw new Error(`sound[${index}] was not created`);
 
-    return ((await result.value) as { sound: MockSound; status: unknown }).sound;
+    return sound;
 };
 
 describe('SoundsProvider', () => {
@@ -35,12 +35,10 @@ describe('SoundsProvider', () => {
     it('unloads all sounds on unmount', async () => {
         const { unmount } = renderHook(() => useSoundEffects(), { wrapper });
         await waitForSoundsLoaded();
-
-        const calls = (Audio.Sound.createAsync as jest.Mock).mock.results;
+        const sounds = getCreatedSounds();
         unmount();
 
-        for (const call of calls) {
-            const { sound } = (await call.value) as { sound: MockSound };
+        for (const sound of sounds) {
             expect(sound.unloadAsync).toHaveBeenCalled();
         }
     });
@@ -59,7 +57,7 @@ describe('useSoundEffects', () => {
         await act(() => {
             effects.deal();
         });
-        expect((await getMockSound(0)).replayAsync).toHaveBeenCalled();
+        expect(getMockSound(0).replayAsync).toHaveBeenCalled();
     });
 
     it('flip() calls replayAsync on the flip sound', async () => {
@@ -67,7 +65,7 @@ describe('useSoundEffects', () => {
         await act(() => {
             effects.flip();
         });
-        expect((await getMockSound(1)).replayAsync).toHaveBeenCalled();
+        expect(getMockSound(1).replayAsync).toHaveBeenCalled();
     });
 
     it('chip() calls replayAsync on the chip sound', async () => {
@@ -75,7 +73,7 @@ describe('useSoundEffects', () => {
         await act(() => {
             effects.chip();
         });
-        expect((await getMockSound(2)).replayAsync).toHaveBeenCalled();
+        expect(getMockSound(2).replayAsync).toHaveBeenCalled();
     });
 
     it('win() calls replayAsync on the win sound', async () => {
@@ -83,7 +81,7 @@ describe('useSoundEffects', () => {
         await act(() => {
             effects.win();
         });
-        expect((await getMockSound(3)).replayAsync).toHaveBeenCalled();
+        expect(getMockSound(3).replayAsync).toHaveBeenCalled();
     });
 
     it('bust() calls replayAsync on the bust sound', async () => {
@@ -91,7 +89,7 @@ describe('useSoundEffects', () => {
         await act(() => {
             effects.bust();
         });
-        expect((await getMockSound(4)).replayAsync).toHaveBeenCalled();
+        expect(getMockSound(4).replayAsync).toHaveBeenCalled();
     });
 
     it('deal() triggers a Light impact haptic', async () => {

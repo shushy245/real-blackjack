@@ -21,24 +21,24 @@ const SoundsContext = createContext<SoundEffects>({
     bust: noop,
 });
 
-/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const WIN_ASSET = require('../../assets/sounds/win.wav');
 const DEAL_ASSET = require('../../assets/sounds/deal.wav');
 const FLIP_ASSET = require('../../assets/sounds/flip.wav');
 const CHIP_ASSET = require('../../assets/sounds/chip.wav');
 const BUST_ASSET = require('../../assets/sounds/bust.wav');
-/* eslint-enable @typescript-eslint/no-require-imports */
+/* eslint-enable @typescript-eslint/no-var-requires */
 
-const playRef = (ref: MutableRefObject<Audio.Sound | null>): void => {
+const playRef = (ref: MutableRefObject<Audio.Sound | undefined>): void => {
     ref.current?.replayAsync().catch(() => {});
 };
 
 export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Element => {
-    const dealRef = useRef<Audio.Sound | null>(null);
-    const flipRef = useRef<Audio.Sound | null>(null);
-    const chipRef = useRef<Audio.Sound | null>(null);
-    const winRef = useRef<Audio.Sound | null>(null);
-    const bustRef = useRef<Audio.Sound | null>(null);
+    const dealRef = useRef<Audio.Sound | undefined>(undefined);
+    const flipRef = useRef<Audio.Sound | undefined>(undefined);
+    const chipRef = useRef<Audio.Sound | undefined>(undefined);
+    const winRef = useRef<Audio.Sound | undefined>(undefined);
+    const bustRef = useRef<Audio.Sound | undefined>(undefined);
 
     useEffect(() => {
         const allRefs = [dealRef, flipRef, chipRef, winRef, bustRef];
