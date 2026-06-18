@@ -697,11 +697,13 @@ const handlePress = (): void => {
 
 ---
 
-### Epic 5 — Sound & Haptics
+### Epic 5 — Sound & Haptics ✅ (2026-06-18)
 
-- **A5.1** — `expo-av` sound setup; `useSounds` hook loads all 5 assets once at mount
-- **A5.2** — Sound events: deal (per card), flip, chip clink (per chip tap), win chime, bust buzz
-- **A5.3** — `expo-haptics`: `ImpactFeedbackStyle.Light` on deal; `NotificationFeedbackType.Success` on win; `NotificationFeedbackType.Error` on bust
+- **A5.1** ✅ — `expo-av` sound setup; `SoundsProvider` context loads all 5 assets once at mount
+- **A5.2** ✅ — Sound events: deal (per card), flip, chip clink (per chip tap), win chime, bust buzz
+- **A5.3** ✅ — `expo-haptics`: `ImpactFeedbackStyle.Light` on deal; `NotificationFeedbackType.Success` on win; `NotificationFeedbackType.Error` on bust
+
+**A5-review (2026-06-18):** Fixed 3 violations — `null→undefined` in 5 `useRef` calls, removed 4 `as` type-assertion casts from test (added typed mock helpers `getCreatedSounds`/`clearCreatedSounds`), corrected `eslint-disable` rule name for `require()` blocks.
 
 ---
 

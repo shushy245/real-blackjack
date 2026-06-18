@@ -47,6 +47,8 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - SD2 complete (2026-06-17): in-memory `MemoryStorageAdapter` for Expo Go (`ExecutionEnvironment.StoreClient`)
 - BF5 complete (2026-06-18): MMKV wiring, async race fix, const-only action, session ID, dead code removal
 - BF5-review complete (2026-06-18): Expo Go crash fix, $0 balance guard, factory validation, port bypass; 118 tests green: 103 engine (Vitest) + 15 app (Jest)
+- Epic 5 complete (2026-06-18): A5.1 SoundsProvider context (expo-av, 5 assets), A5.2 sound events wired (deal/flip/chip/win/bust), A5.3 haptics wired (deal/win/bust); 128 tests green: 103 engine + 25 app
+- A5-review complete (2026-06-18): null→undefined (5 useRef calls), 4 as-casts removed (typed mock helpers added), eslint-disable rule name corrected
 
 ## What's next
-- **Epic 5** — Sound & Haptics (A5.1–A5.3)
+- **All planned epics complete.** Plan new features (EAS Build / distribution, Game Over screen, advisor, etc.) before writing code.
