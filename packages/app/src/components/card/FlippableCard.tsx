@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { JSX, ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -16,8 +16,14 @@ type FlippableCardProps = {
 export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX.Element => {
     const progress = useSharedValue(flipped ? 1 : 0);
     const sounds = useSoundEffects();
+    const hasMountedRef = useRef(false);
 
     useEffect(() => {
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true;
+
+            return;
+        }
         if (flipped) {
             sounds.flip();
             progress.value = withTiming(1, { duration: FLIP_DURATION_MS });
@@ -25,7 +31,7 @@ export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX
             return;
         }
         progress.value = 0;
-    }, [flipped, progress]);
+    }, [flipped, progress, sounds]);
 
     const backStyle = useAnimatedStyle(() => ({
         opacity: progress.value < 0.5 ? 1 : 0,

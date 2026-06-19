@@ -55,7 +55,7 @@ export const useResultFeedback = (round: RoundState | undefined): ResultFeedback
             sounds.bust();
             bustFlash.value = buildFlashAnimation();
         }
-    }, [round]);
+    }, [round, sounds]);
 
     const winFlashStyle = useAnimatedStyle(() => ({ opacity: winFlash.value }));
     const bustFlashStyle = useAnimatedStyle(() => ({ opacity: bustFlash.value }));

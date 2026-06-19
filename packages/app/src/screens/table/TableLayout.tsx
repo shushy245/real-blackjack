@@ -27,9 +27,15 @@ export const TableLayout = (): JSX.Element => {
 
     const { round, balance } = gameState;
 
-    const handlePlaceBet = (amount: number): void => storeAction({ type: 'PlaceBet', amount });
-    const handleMove = (move: Move): void => storeAction({ type: move });
-    const handleCollect = (): void => storeAction({ type: 'CollectResult' });
+    const handlePlaceBet = (amount: number): void => {
+        storeAction({ type: 'PlaceBet', amount });
+    };
+    const handleMove = (move: Move): void => {
+        storeAction({ type: move });
+    };
+    const handleCollect = (): void => {
+        storeAction({ type: 'CollectResult' });
+    };
 
     const handleCashOut = (): void => {
         Alert.alert('Cash Out', `Cash out $${balance} and end your session?`, [

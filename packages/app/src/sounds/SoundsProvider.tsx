@@ -1,7 +1,7 @@
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import type { JSX, MutableRefObject, ReactNode } from 'react';
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 
 type SoundEffects = {
     deal: () => void;
@@ -41,6 +41,7 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
     const bustRef = useRef<Audio.Sound | undefined>(undefined);
 
     useEffect(() => {
+        let cancelled = false;
         const allRefs = [dealRef, flipRef, chipRef, winRef, bustRef];
 
         const load = async (): Promise<void> => {
@@ -52,6 +53,13 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
                 Audio.Sound.createAsync(WIN_ASSET),
                 Audio.Sound.createAsync(BUST_ASSET),
             ]);
+            if (cancelled) {
+                [deal, flip, chip, win, bust].forEach(({ sound }) => {
+                    sound.unloadAsync().catch(() => {});
+                });
+
+                return;
+            }
             dealRef.current = deal.sound;
             flipRef.current = flip.sound;
             chipRef.current = chip.sound;
@@ -62,28 +70,32 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
         load().catch(() => {});
 
         return () => {
+            cancelled = true;
             allRefs.forEach((ref) => {
                 ref.current?.unloadAsync().catch(() => {});
             });
         };
     }, []);
 
-    const value: SoundEffects = {
-        deal: () => {
-            playRef(dealRef);
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-        },
-        flip: () => playRef(flipRef),
-        chip: () => playRef(chipRef),
-        win: () => {
-            playRef(winRef);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        },
-        bust: () => {
-            playRef(bustRef);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-        },
-    };
+    const value = useMemo<SoundEffects>(
+        () => ({
+            deal: () => {
+                playRef(dealRef);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            },
+            flip: () => playRef(flipRef),
+            chip: () => playRef(chipRef),
+            win: () => {
+                playRef(winRef);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            },
+            bust: () => {
+                playRef(bustRef);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+            },
+        }),
+        [],
+    );
 
     return <SoundsContext.Provider value={value}>{children}</SoundsContext.Provider>;
 };
