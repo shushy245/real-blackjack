@@ -16,14 +16,12 @@ type FlippableCardProps = {
 export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX.Element => {
     const progress = useSharedValue(flipped ? 1 : 0);
     const sounds = useSoundEffects();
-    const hasMountedRef = useRef(false);
+    const prevFlippedRef = useRef(flipped);
 
     useEffect(() => {
-        if (!hasMountedRef.current) {
-            hasMountedRef.current = true;
-
-            return;
-        }
+        const prev = prevFlippedRef.current;
+        prevFlippedRef.current = flipped;
+        if (prev === flipped) return;
         if (flipped) {
             sounds.flip();
             progress.value = withTiming(1, { duration: FLIP_DURATION_MS });

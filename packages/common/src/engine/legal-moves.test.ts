@@ -19,6 +19,7 @@ const baseState = (): RoundState => ({
     balance: 500,
     insuranceBet: undefined,
     insuranceTaken: false,
+    splitOccurred: false,
     handBets: [50],
 });
 

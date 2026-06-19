@@ -41,7 +41,7 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
     const bustRef = useRef<Audio.Sound | undefined>(undefined);
 
     useEffect(() => {
-        let cancelled = false;
+        const control = { cancelled: false };
         const allRefs = [dealRef, flipRef, chipRef, winRef, bustRef];
 
         const load = async (): Promise<void> => {
@@ -53,7 +53,7 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
                 Audio.Sound.createAsync(WIN_ASSET),
                 Audio.Sound.createAsync(BUST_ASSET),
             ]);
-            if (cancelled) {
+            if (control.cancelled) {
                 [deal, flip, chip, win, bust].forEach(({ sound }) => {
                     sound.unloadAsync().catch(() => {});
                 });
@@ -70,7 +70,7 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
         load().catch(() => {});
 
         return () => {
-            cancelled = true;
+            control.cancelled = true;
             allRefs.forEach((ref) => {
                 ref.current?.unloadAsync().catch(() => {});
             });
@@ -83,8 +83,12 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
                 playRef(dealRef);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
             },
-            flip: () => playRef(flipRef),
-            chip: () => playRef(chipRef),
+            flip: () => {
+                playRef(flipRef);
+            },
+            chip: () => {
+                playRef(chipRef);
+            },
             win: () => {
                 playRef(winRef);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

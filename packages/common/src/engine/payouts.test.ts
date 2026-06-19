@@ -194,6 +194,7 @@ describe('settleRound', () => {
             balance: 450,
             insuranceBet: undefined,
             insuranceTaken: false,
+            splitOccurred: true,
         };
         const { handResults } = settleRound(splitRound);
 

@@ -1,5 +1,5 @@
 import { type RoundState } from './round';
-import { calculateHand, isBlackjack, isBust } from './hand';
+import { calculateHand, isBust } from './hand';
 
 export type HandOutcome = 'win' | 'lose' | 'push' | 'blackjack';
 
@@ -16,10 +16,10 @@ const settleHand = (
     dealerBJ: boolean,
     dealerHandValue: ReturnType<typeof calculateHand>,
     insuranceBet: number | undefined,
-    isSplitRound: boolean,
+    splitOccurred: boolean,
 ): HandResult => {
     const playerHand = calculateHand(hand);
-    const playerBJ = isBlackjack(hand);
+    const playerBJ = hand.length === 2 && playerHand.value === 21 && playerHand.isSoft;
 
     // Insurance taken + dealer BJ: main bet loses; insurance payout (insuranceDelta) covers the loss
     if (dealerBJ && insuranceBet !== undefined && !playerBJ) return { handIndex, outcome: 'lose', payout: -bet };
@@ -29,7 +29,7 @@ const settleHand = (
     if (playerBJ) {
         if (dealerBJ) return { handIndex, outcome: 'push', payout: 0 };
         // Split-hand natural 21 pays 1:1, not 3:2 (standard casino rule)
-        if (isSplitRound) return { handIndex, outcome: 'win', payout: bet };
+        if (splitOccurred) return { handIndex, outcome: 'win', payout: bet };
 
         return { handIndex, outcome: 'blackjack', payout: Math.floor(bet * 1.5) };
     }
@@ -46,13 +46,12 @@ const settleHand = (
 
 export const settleRound = (state: RoundState): { netDelta: number; handResults: HandResult[] } => {
     const dealerHandValue = calculateHand(state.dealerCards);
-    const dealerBJ = isBlackjack(state.dealerCards);
+    const dealerBJ = state.dealerCards.length === 2 && dealerHandValue.value === 21 && dealerHandValue.isSoft;
 
-    const isSplitRound = state.playerHands.length > 1;
     const handResults: HandResult[] = state.playerHands.map((hand, i) => {
         const bet = state.handBets[i] ?? state.originalBet;
 
-        return settleHand(hand, i, bet, dealerBJ, dealerHandValue, state.insuranceBet, isSplitRound);
+        return settleHand(hand, i, bet, dealerBJ, dealerHandValue, state.insuranceBet, state.splitOccurred);
     });
 
     const insuranceDelta =

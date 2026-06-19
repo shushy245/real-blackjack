@@ -33,33 +33,32 @@ export const makeGameStore = ({
 }: GameStoreDeps): UseBoundStore<StoreApi<GameStoreState>> => {
     const startingBalance = isValidBalance(initialBalance) ? initialBalance : GAME_CONFIG.startingBalance;
 
-    const store = create<GameStoreState>()((set, get) => ({
-        gameState: createGame({ ...GAME_CONFIG, startingBalance }),
-        lastBet: 0,
-
-        action: (move: GameAction) =>
-            set((state) => {
-                const afterMove = applyAction(state.gameState, move);
-                const gameState =
-                    afterMove.round?.phase === 'dealer-turn'
-                        ? applyAction(afterMove, { type: 'RunDealerTurn' })
-                        : afterMove;
-
-                return { gameState, lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet };
-            }),
-
-        newGame: () => {
+    const store = create<GameStoreState>()((set, get) => {
+        const endAndReset = (): void => {
             const { gameState } = get();
             onSessionEnd({ peak: gameState.sessionPeak, endBalance: gameState.balance });
             set({ gameState: createGame(GAME_CONFIG), lastBet: 0 });
-        },
+        };
 
-        cashOut: () => {
-            const { gameState } = get();
-            onSessionEnd({ peak: gameState.sessionPeak, endBalance: gameState.balance });
-            set({ gameState: createGame(GAME_CONFIG), lastBet: 0 });
-        },
-    }));
+        return {
+            gameState: createGame({ ...GAME_CONFIG, startingBalance }),
+            lastBet: 0,
+
+            action: (move: GameAction) =>
+                set((state) => {
+                    const afterMove = applyAction(state.gameState, move);
+                    const gameState =
+                        afterMove.round?.phase === 'dealer-turn'
+                            ? applyAction(afterMove, { type: 'RunDealerTurn' })
+                            : afterMove;
+
+                    return { gameState, lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet };
+                }),
+
+            newGame: endAndReset,
+            cashOut: endAndReset,
+        };
+    });
 
     store.subscribe((state, prevState) => {
         if (state.gameState.balance === prevState.gameState.balance) return;

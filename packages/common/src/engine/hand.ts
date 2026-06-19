@@ -22,8 +22,13 @@ const rankValueMap: Record<Rank, number> = {
 };
 
 export const calculateHand = (cards: readonly Card[]): HandValue => {
-    const rawValue = cards.reduce((sum, c) => sum + rankValueMap[c.rank], 0);
-    const aceCount = cards.filter((c) => c.rank === Rank.Ace).length;
+    const { rawValue, aceCount } = cards.reduce(
+        (acc, c) => ({
+            rawValue: acc.rawValue + rankValueMap[c.rank],
+            aceCount: acc.aceCount + (c.rank === Rank.Ace ? 1 : 0),
+        }),
+        { rawValue: 0, aceCount: 0 },
+    );
     const softReductions = Math.min(aceCount, Math.max(0, Math.ceil((rawValue - 21) / 10)));
 
     return { value: rawValue - softReductions * 10, isSoft: aceCount - softReductions > 0 };

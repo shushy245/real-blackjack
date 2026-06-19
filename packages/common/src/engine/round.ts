@@ -19,6 +19,7 @@ export type RoundState = {
     readonly balance: number;
     readonly insuranceBet: number | undefined;
     readonly insuranceTaken: boolean;
+    readonly splitOccurred: boolean;
 };
 
 export type PlayerAction = { type: Move };
@@ -71,6 +72,7 @@ export const createRound = (bet: number, balance: number, shoe: Shoe): RoundStat
         balance,
         insuranceBet: undefined,
         insuranceTaken: false,
+        splitOccurred: false,
     };
 };
 
@@ -154,6 +156,7 @@ const applySplit = (state: RoundState): RoundState => {
         playerHands: newHands,
         handBets: newHandBets,
         balance: state.balance - state.originalBet,
+        splitOccurred: true,
     };
 };
 
@@ -203,15 +206,15 @@ export const applyRoundAction = (state: RoundState, action: PlayerAction): Round
     return handler(state);
 };
 
+const dealUntilStand = (cards: readonly Card[], shoe: Shoe): { cards: readonly Card[]; shoe: Shoe } => {
+    if (!shouldDealerHit(calculateHand(cards))) return { cards, shoe };
+    const [newCard, newShoe] = dealCard(shoe);
+
+    return dealUntilStand([...cards, newCard], newShoe);
+};
+
 export const runDealerTurn = (state: RoundState): RoundState => {
     if (state.phase !== 'dealer-turn') throw new Error(`runDealerTurn: expected dealer-turn phase, got ${state.phase}`);
-
-    const dealUntilStand = (cards: readonly Card[], shoe: Shoe): { cards: readonly Card[]; shoe: Shoe } => {
-        if (!shouldDealerHit(calculateHand(cards))) return { cards, shoe };
-        const [newCard, newShoe] = dealCard(shoe);
-
-        return dealUntilStand([...cards, newCard], newShoe);
-    };
 
     const { cards: dealerCards, shoe } = dealUntilStand(state.dealerCards, state.shoe);
 
