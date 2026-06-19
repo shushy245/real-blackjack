@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Shoe } from './shoe';
 import type { Card } from './types';
 import { settleRound } from './payouts';
+import type { RoundState } from './round';
 import { Move, Rank, Suit } from './types';
 import { applyRoundAction, createRound, runDealerTurn } from './round';
 
@@ -172,6 +173,32 @@ describe('settleRound', () => {
         const { netDelta } = settleRound(declined);
 
         expect(netDelta).toBe(-50);
+    });
+
+    it('split hand with natural 21 (Ace + ten-value) pays 1:1, not 3:2', () => {
+        // Synthetic split round: two hands, hand[0] = [Ace, King] = 21 (looks like BJ)
+        // Standard rule: split-hand natural 21 is a regular win, not blackjack
+        const splitRound: RoundState = {
+            phase: 'settling' as const,
+            shoe: { cards: [], dealtCount: 0 },
+            playerHands: [
+                [card(Rank.Ace), card(Rank.King)],
+                [card(Rank.Eight), card(Rank.Nine)],
+            ],
+            dealerCards: [card(Rank.Six), card(Rank.Ten)],
+            holeCardRevealed: true,
+            activeHandIndex: 1,
+            originalBet: 50,
+            activeBet: 50,
+            handBets: [50, 50],
+            balance: 450,
+            insuranceBet: undefined,
+            insuranceTaken: false,
+        };
+        const { handResults } = settleRound(splitRound);
+
+        expect(handResults[0]?.outcome).toBe('win'); // not 'blackjack'
+        expect(handResults[0]?.payout).toBe(50); // 1:1, not 75 (3:2)
     });
 
     it('insurance + dealer no BJ → insurance lost; original bet settles normally', () => {

@@ -16,6 +16,7 @@ const settleHand = (
     dealerBJ: boolean,
     dealerHandValue: ReturnType<typeof calculateHand>,
     insuranceBet: number | undefined,
+    isSplitRound: boolean,
 ): HandResult => {
     const playerHand = calculateHand(hand);
     const playerBJ = isBlackjack(hand);
@@ -27,6 +28,8 @@ const settleHand = (
 
     if (playerBJ) {
         if (dealerBJ) return { handIndex, outcome: 'push', payout: 0 };
+        // Split-hand natural 21 pays 1:1, not 3:2 (standard casino rule)
+        if (isSplitRound) return { handIndex, outcome: 'win', payout: bet };
 
         return { handIndex, outcome: 'blackjack', payout: Math.floor(bet * 1.5) };
     }
@@ -45,10 +48,11 @@ export const settleRound = (state: RoundState): { netDelta: number; handResults:
     const dealerHandValue = calculateHand(state.dealerCards);
     const dealerBJ = isBlackjack(state.dealerCards);
 
+    const isSplitRound = state.playerHands.length > 1;
     const handResults: HandResult[] = state.playerHands.map((hand, i) => {
         const bet = state.handBets[i] ?? state.originalBet;
 
-        return settleHand(hand, i, bet, dealerBJ, dealerHandValue, state.insuranceBet);
+        return settleHand(hand, i, bet, dealerBJ, dealerHandValue, state.insuranceBet, isSplitRound);
     });
 
     const insuranceDelta =

@@ -195,6 +195,21 @@ describe('applyRoundAction — Split', () => {
         expect(next.activeHandIndex).toBe(0);
     });
 
+    it('deducts originalBet from balance', () => {
+        const shoe = shoeWith([
+            card(Rank.Eight, Suit.Hearts),
+            card(Rank.Six),
+            card(Rank.Eight, Suit.Spades),
+            card(Rank.King),
+            card(Rank.Three),
+            card(Rank.Four),
+        ]);
+        const round = createRound(50, 500, shoe);
+        const next = applyRoundAction(round, { type: Move.Split });
+
+        expect(next.balance).toBe(450); // 500 - 50 (originalBet for second hand)
+    });
+
     it('throws when attempting a 5th split', () => {
         const base = actionRound([]);
         const fourHands: typeof base = {

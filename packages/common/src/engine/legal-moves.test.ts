@@ -69,6 +69,17 @@ describe('getLegalMoves', () => {
         expect(moves).not.toContain(Move.Split);
     });
 
+    it('excludes Split when balance < originalBet', () => {
+        const state: RoundState = {
+            ...baseState(),
+            playerHands: [[card(Rank.Eight, Suit.Hearts), card(Rank.Eight, Suit.Spades)]],
+            balance: 40, // less than originalBet (50)
+        };
+        const moves = getLegalMoves(state);
+
+        expect(moves).not.toContain(Move.Split);
+    });
+
     it('excludes Split when already at 4 hands', () => {
         const state: RoundState = {
             ...baseState(),

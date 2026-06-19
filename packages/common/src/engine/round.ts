@@ -148,7 +148,13 @@ const applySplit = (state: RoundState): RoundState => {
         ...state.handBets.slice(state.activeHandIndex + 1),
     ];
 
-    return { ...state, shoe: shoe2, playerHands: newHands, handBets: newHandBets };
+    return {
+        ...state,
+        shoe: shoe2,
+        playerHands: newHands,
+        handBets: newHandBets,
+        balance: state.balance - state.originalBet,
+    };
 };
 
 const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundState => {

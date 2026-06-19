@@ -13,7 +13,7 @@ export const getLegalMoves = (state: RoundState): Move[] => {
 
     if (isFirstAction && state.balance >= state.activeBet) moves.push(Move.Double);
 
-    if (isFirstAction && state.playerHands.length < 4) {
+    if (isFirstAction && state.playerHands.length < 4 && state.balance >= state.originalBet) {
         const first = activeHand[0];
         const second = activeHand[1];
         if (first !== undefined && second !== undefined && first.rank === second.rank) moves.push(Move.Split);
