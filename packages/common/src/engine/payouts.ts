@@ -1,5 +1,5 @@
 import { type RoundState } from './round';
-import { calculateHand, isBust } from './hand';
+import { calculateHand, isBlackjack, isBust } from './hand';
 
 export type HandOutcome = 'win' | 'lose' | 'push' | 'blackjack';
 
@@ -19,7 +19,7 @@ const settleHand = (
     splitOccurred: boolean,
 ): HandResult => {
     const playerHand = calculateHand(hand);
-    const playerBJ = hand.length === 2 && playerHand.value === 21 && playerHand.isSoft;
+    const playerBJ = isBlackjack(hand);
 
     // Insurance taken + dealer BJ: main bet loses; insurance payout (insuranceDelta) covers the loss
     if (dealerBJ && insuranceBet !== undefined && !playerBJ) return { handIndex, outcome: 'lose', payout: -bet };
@@ -46,7 +46,7 @@ const settleHand = (
 
 export const settleRound = (state: RoundState): { netDelta: number; handResults: HandResult[] } => {
     const dealerHandValue = calculateHand(state.dealerCards);
-    const dealerBJ = state.dealerCards.length === 2 && dealerHandValue.value === 21 && dealerHandValue.isSoft;
+    const dealerBJ = isBlackjack(state.dealerCards);
 
     const handResults: HandResult[] = state.playerHands.map((hand, i) => {
         const bet = state.handBets[i] ?? state.originalBet;

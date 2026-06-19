@@ -44,7 +44,7 @@ export const makeGameStore = ({
             gameState: createGame({ ...GAME_CONFIG, startingBalance }),
             lastBet: 0,
 
-            action: (move: GameAction) =>
+            action: (move: GameAction) => {
                 set((state) => {
                     const afterMove = applyAction(state.gameState, move);
                     const gameState =
@@ -53,7 +53,8 @@ export const makeGameStore = ({
                             : afterMove;
 
                     return { gameState, lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet };
-                }),
+                });
+            },
 
             newGame: endAndReset,
             cashOut: endAndReset,
