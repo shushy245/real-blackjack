@@ -206,14 +206,14 @@ export const applyRoundAction = (state: RoundState, action: PlayerAction): Round
 export const runDealerTurn = (state: RoundState): RoundState => {
     if (state.phase !== 'dealer-turn') throw new Error(`runDealerTurn: expected dealer-turn phase, got ${state.phase}`);
 
-    let dealerCards = [...state.dealerCards];
-    let shoe = state.shoe;
-
-    while (shouldDealerHit(calculateHand(dealerCards))) {
+    const dealUntilStand = (cards: readonly Card[], shoe: Shoe): { cards: readonly Card[]; shoe: Shoe } => {
+        if (!shouldDealerHit(calculateHand(cards))) return { cards, shoe };
         const [newCard, newShoe] = dealCard(shoe);
-        dealerCards = [...dealerCards, newCard];
-        shoe = newShoe;
-    }
+
+        return dealUntilStand([...cards, newCard], newShoe);
+    };
+
+    const { cards: dealerCards, shoe } = dealUntilStand(state.dealerCards, state.shoe);
 
     return { ...state, dealerCards, shoe, holeCardRevealed: true, phase: 'settling' };
 };

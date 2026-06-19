@@ -22,20 +22,11 @@ const rankValueMap: Record<Rank, number> = {
 };
 
 export const calculateHand = (cards: readonly Card[]): HandValue => {
-    let value = 0;
-    let softAces = 0;
+    const rawValue = cards.reduce((sum, c) => sum + rankValueMap[c.rank], 0);
+    const aceCount = cards.filter((c) => c.rank === Rank.Ace).length;
+    const softReductions = Math.min(aceCount, Math.max(0, Math.ceil((rawValue - 21) / 10)));
 
-    for (const card of cards) {
-        value += rankValueMap[card.rank];
-        if (card.rank === Rank.Ace) softAces++;
-    }
-
-    while (value > 21 && softAces > 0) {
-        value -= 10;
-        softAces--;
-    }
-
-    return { value, isSoft: softAces > 0 };
+    return { value: rawValue - softReductions * 10, isSoft: aceCount - softReductions > 0 };
 };
 
 export const isBust = (hand: HandValue): boolean => hand.value > 21;
