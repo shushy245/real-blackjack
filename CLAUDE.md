@@ -50,6 +50,10 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - Epic 5 complete (2026-06-18): A5.1 SoundsProvider context (expo-av, 5 assets), A5.2 sound events wired (deal/flip/chip/win/bust), A5.3 haptics wired (deal/win/bust); 128 tests green: 103 engine + 25 app
 - A5-review complete (2026-06-18): null→undefined (5 useRef calls), 4 as-casts removed (typed mock helpers added), eslint-disable rule name corrected
 - CQ1 complete (2026-06-19): max-effort code quality audit of both packages; 15 findings written as BF6 tasks in `docs/plan.md`
+- BF6 complete (2026-06-19): all 15 CQ1 findings fixed across 4 commits; 131 tests green: 106 engine + 25 app
+- BF7 complete (2026-06-19): 10 BF6 code-review follow-ups fixed (splitOccurred field, isBlackjack inlining, hasMountedRef→prevFlippedRef, const control, endAndReset extraction, single-pass calculateHand, dealUntilStand hoisted)
+- BF8 complete (2026-06-19): 2 BF7 code-review findings fixed (isBlackjack re-imported in payouts.ts; action arrow braces in game-store.ts); 131 tests green
 
 ## What's next
-- **BF6** — 15 audit findings from CQ1 (see `docs/plan.md` Story BF6). Fix before shipping. Top-priority: BF6-1 (split-ace blackjack overpays 3:2 instead of 1:1), BF6-2 (game-over sessions lost from leaderboard), BF6-3 (split without balance guard).
+- **EAS Build** — Android APK for device testing. Run `eas build --platform android --profile preview` once EAS credentials are configured.
+- **Pre-ship smoke test** — scan QR in Expo Go, play a full session (deal, hit, stand, double, split, insurance), cash out, verify leaderboard entry.
