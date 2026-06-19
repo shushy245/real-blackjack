@@ -9,6 +9,9 @@ export const GAME_CONFIG = { startingBalance: 1000, minBet: 10, maxBet: 1000 } a
 
 export const BALANCE_KEY = 'game.balance';
 
+export const isValidBalance = (n: number | undefined): n is number =>
+    n !== undefined && Number.isFinite(n) && Number.isInteger(n) && n > 0;
+
 type GameStoreState = {
     readonly gameState: GameState;
     readonly lastBet: number;
@@ -28,10 +31,7 @@ export const makeGameStore = ({
     initialBalance,
     onSessionEnd,
 }: GameStoreDeps): UseBoundStore<StoreApi<GameStoreState>> => {
-    const startingBalance =
-        initialBalance !== undefined && Number.isFinite(initialBalance) && initialBalance > 0
-            ? initialBalance
-            : GAME_CONFIG.startingBalance;
+    const startingBalance = isValidBalance(initialBalance) ? initialBalance : GAME_CONFIG.startingBalance;
 
     const store = create<GameStoreState>()((set, get) => ({
         gameState: createGame({ ...GAME_CONFIG, startingBalance }),
@@ -48,7 +48,11 @@ export const makeGameStore = ({
                 return { gameState, lastBet: move.type === 'PlaceBet' ? move.amount : state.lastBet };
             }),
 
-        newGame: () => set({ gameState: createGame(GAME_CONFIG), lastBet: 0 }),
+        newGame: () => {
+            const { gameState } = get();
+            onSessionEnd({ peak: gameState.sessionPeak, endBalance: gameState.balance });
+            set({ gameState: createGame(GAME_CONFIG), lastBet: 0 });
+        },
 
         cashOut: () => {
             const { gameState } = get();
@@ -57,7 +61,8 @@ export const makeGameStore = ({
         },
     }));
 
-    store.subscribe((state) => {
+    store.subscribe((state, prevState) => {
+        if (state.gameState.balance === prevState.gameState.balance) return;
         storage.setItem(BALANCE_KEY, state.gameState.balance.toString()).catch((err) => {
             // eslint-disable-next-line no-console
             console.error('game-store: failed to persist balance', err);

@@ -43,7 +43,7 @@ export const makeLeaderboardStore = (storage: StoragePort): LeaderboardStoreHook
                             endBalance,
                         };
                         const updated = [...state.sessions, newSession]
-                            .sort((a, b) => b.peak - a.peak || b.date.localeCompare(a.date))
+                            .sort((a, b) => b.peak - a.peak || (b.date > a.date ? 1 : b.date < a.date ? -1 : 0))
                             .slice(0, MAX_SESSIONS);
 
                         return { sessions: updated };
