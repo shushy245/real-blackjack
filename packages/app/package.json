@@ -9,7 +9,8 @@
         "ios": "expo start --ios",
         "web": "expo start --web",
         "typecheck": "tsc --noEmit",
-        "test": "jest"
+        "test": "jest",
+        "test:watch": "jest --watch"
     },
     "dependencies": {
         "@expo/metro-runtime": "~6.1.2",

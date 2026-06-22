@@ -6,7 +6,8 @@
     "types": "src/engine/index.ts",
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "test": "vitest run --config vitest.config.ts"
+        "test": "vitest run --config vitest.config.ts",
+        "test:watch": "vitest --config vitest.config.ts"
     },
     "devDependencies": {
         "typescript": "^5.0.0",
