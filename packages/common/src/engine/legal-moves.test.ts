@@ -147,4 +147,24 @@ describe('getLegalMoves', () => {
 
         expect(getLegalMoves(state)).toEqual([Move.Insurance, Move.Stand]);
     });
+
+    it('does not allow additional moves when user has blackjack and dealer has a non-ace', () => {
+        const state: RoundState = {
+            ...baseState(),
+            playerHands: [[card(Rank.Ace), card(Rank.King)]],
+            dealerCards: [card(Rank.Six), card(Rank.King)],
+        };
+
+        expect(getLegalMoves(state)).toEqual([]);
+    });
+
+    it('does not allow additional moves when user has blackjack and dealer has an ace', () => {
+        const state: RoundState = {
+            ...baseState(),
+            playerHands: [[card(Rank.Ace), card(Rank.King)]],
+            dealerCards: [card(Rank.Ace), card(Rank.King)],
+        };
+
+        expect(getLegalMoves(state)).toEqual([]);
+    });
 });
