@@ -5,7 +5,7 @@ import type { GameAction, GameState } from '@real-blackjack/common';
 
 import type { StoragePort } from './storage.port';
 
-export const GAME_CONFIG = { startingBalance: 1000, minBet: 10, maxBet: 1000 } as const;
+export const GAME_CONFIG = { startingBalance: 1000, minBet: 10 } as const;
 
 export const BALANCE_KEY = 'game.balance';
 

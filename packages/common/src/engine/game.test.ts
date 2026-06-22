@@ -5,13 +5,13 @@ import { applyAction, createGame, getLegalMoves, getState } from './index';
 
 describe('createGame', () => {
     it('returns a game with the configured starting balance', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000 });
+        const game = createGame({ startingBalance: 1000, minBet: 10 });
 
         expect(game.balance).toBe(1000);
     });
 
     it('starts with a fresh shoe and no active round', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000 });
+        const game = createGame({ startingBalance: 1000, minBet: 10 });
 
         expect(game.shoe.cards).toHaveLength(312);
         expect(game.round).toBeUndefined();
@@ -20,7 +20,7 @@ describe('createGame', () => {
 
 describe('applyAction — PlaceBet', () => {
     it('deducts the bet from balance and starts a round in player-action or settling', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000, seed: 42 });
+        const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const next = applyAction(game, { type: 'PlaceBet', amount: 50 });
 
         expect(next.balance).toBe(950);
@@ -28,7 +28,7 @@ describe('applyAction — PlaceBet', () => {
     });
 
     it('reshuffles the shoe when penetration threshold is reached before dealing', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000, seed: 42 });
+        const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const exhausted = { ...game, shoe: { ...game.shoe, dealtCount: 234 } };
         const next = applyAction(exhausted, { type: 'PlaceBet', amount: 50 });
 
@@ -36,7 +36,7 @@ describe('applyAction — PlaceBet', () => {
     });
 
     it('throws when a round is already in progress', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000, seed: 42 });
+        const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const withRound = applyAction(game, { type: 'PlaceBet', amount: 50 });
 
         expect(() => applyAction(withRound, { type: 'PlaceBet', amount: 50 })).toThrow(
@@ -45,13 +45,13 @@ describe('applyAction — PlaceBet', () => {
     });
 
     it('throws when bet is below minimum', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000 });
+        const game = createGame({ startingBalance: 1000, minBet: 10 });
 
         expect(() => applyAction(game, { type: 'PlaceBet', amount: 5 })).toThrow();
     });
 
     it('throws when bet exceeds maximum', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000 });
+        const game = createGame({ startingBalance: 1000, minBet: 10 });
 
         expect(() => applyAction(game, { type: 'PlaceBet', amount: 2000 })).toThrow();
     });
@@ -59,7 +59,7 @@ describe('applyAction — PlaceBet', () => {
 
 describe('applyAction — player moves', () => {
     const startRound = () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000, seed: 42 });
+        const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
 
         return applyAction(game, { type: 'PlaceBet', amount: 50 });
     };
@@ -91,7 +91,7 @@ describe('applyAction — player moves', () => {
 
 describe('applyAction — CollectResult', () => {
     it('applies the net delta to balance and clears the round', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000, seed: 42 });
+        const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         let g = applyAction(game, { type: 'PlaceBet', amount: 50 });
 
         // Play to completion (stand repeatedly until settling)
@@ -110,7 +110,7 @@ describe('applyAction — CollectResult', () => {
 
 describe('getState', () => {
     it('returns a plain serializable object with no functions', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000, seed: 42 });
+        const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
 
         expect(() => JSON.stringify(getState(game))).not.toThrow();
         const state = getState(game);
@@ -120,7 +120,7 @@ describe('getState', () => {
 
 describe('getLegalMoves', () => {
     it('returns Move[] matching the current round state', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000, seed: 42 });
+        const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const withRound = applyAction(game, { type: 'PlaceBet', amount: 50 });
         const moves = getLegalMoves(withRound);
 
@@ -128,7 +128,7 @@ describe('getLegalMoves', () => {
     });
 
     it('returns empty array when no round is active', () => {
-        const game = createGame({ startingBalance: 1000, minBet: 10, maxBet: 1000 });
+        const game = createGame({ startingBalance: 1000, minBet: 10 });
 
         expect(getLegalMoves(game)).toEqual([]);
     });

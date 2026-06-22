@@ -474,7 +474,7 @@ Test list:
   - GameState contains no functions or circular references (JSON.stringify succeeds)
 
 Implementation note:
-  GameConfig: { startingBalance: number; minBet: number; maxBet: number; seed?: number }
+  GameConfig: { startingBalance: number; minBet: number; seed?: number }
   GameState: { balance: number; sessionPeak: number; shoe: Shoe; round: RoundState | undefined }
   createGame(config): GameState
   applyAction(game, action): GameState  — immutable; shoe reshuffled at round creation if needed

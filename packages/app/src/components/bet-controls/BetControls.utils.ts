@@ -16,7 +16,6 @@ export const chipConfigMap: Record<ChipDenomination, ChipConfig> = {
     500: { color: '#3D1570', edgeColor: '#8040C0', label: '$500' },
 };
 
-export const clampBet = (current: number, added: number, balance: number, maxBet: number): number =>
-    Math.min(current + added, Math.min(balance, maxBet));
+export const clampBet = (current: number, added: number, balance: number): number => Math.min(current + added, balance);
 
 export const formatAmount = (amount: number): string => `$${amount}`;

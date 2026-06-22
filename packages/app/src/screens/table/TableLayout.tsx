@@ -157,13 +157,7 @@ const BetZonePanel = ({
 
         return (
             <View style={styles.betZone}>
-                <BetControls
-                    balance={balance}
-                    minBet={GAME_CONFIG.minBet}
-                    maxBet={GAME_CONFIG.maxBet}
-                    lastBet={lastBet}
-                    onPlaceBet={onPlaceBet}
-                />
+                <BetControls balance={balance} minBet={GAME_CONFIG.minBet} lastBet={lastBet} onPlaceBet={onPlaceBet} />
             </View>
         );
     }

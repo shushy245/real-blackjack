@@ -8,7 +8,6 @@ import { type RoundState, createRound, applyRoundAction, runDealerTurn } from '.
 export type GameConfig = {
     readonly startingBalance: number;
     readonly minBet: number;
-    readonly maxBet: number;
     readonly seed?: number;
 };
 
@@ -48,8 +47,6 @@ const applyPlaceBet = (game: GameState, amount: number): GameState => {
     if (game.round !== undefined) throw new Error('applyAction: PlaceBet — a round is already in progress');
     if (amount < game.config.minBet)
         throw new Error(`applyAction: PlaceBet — bet ${amount} is below minimum ${game.config.minBet}`);
-    if (amount > game.config.maxBet)
-        throw new Error(`applyAction: PlaceBet — bet ${amount} exceeds maximum ${game.config.maxBet}`);
     if (amount > game.balance) throw new Error(`applyAction: PlaceBet — bet ${amount} exceeds balance ${game.balance}`);
 
     const shoe = needsReshuffle(game.shoe) ? reshuffleShoe(game.shoe, game.rng) : game.shoe;

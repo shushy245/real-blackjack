@@ -10,19 +10,18 @@ import { CHIP_DENOMINATIONS, type ChipDenomination, clampBet, chipConfigMap, for
 type BetControlsProps = {
     balance: number;
     minBet: number;
-    maxBet: number;
     lastBet: number;
     onPlaceBet: (amount: number) => void;
 };
 
-export const BetControls = ({ balance, minBet, maxBet, lastBet, onPlaceBet }: BetControlsProps): JSX.Element => {
+export const BetControls = ({ balance, minBet, lastBet, onPlaceBet }: BetControlsProps): JSX.Element => {
     const [pendingBet, setPendingBet] = useState(0);
 
-    const handleChip = (chip: ChipDenomination): void => setPendingBet((prev) => clampBet(prev, chip, balance, maxBet));
+    const handleChip = (chip: ChipDenomination): void => setPendingBet((prev) => clampBet(prev, chip, balance));
 
     const handleClear = (): void => setPendingBet(0);
 
-    const handleRepeat = (): void => setPendingBet(Math.min(lastBet, balance, maxBet));
+    const handleRepeat = (): void => setPendingBet(Math.min(lastBet, balance));
 
     const handleDeal = (): void => {
         if (pendingBet < minBet) return;
@@ -36,7 +35,7 @@ export const BetControls = ({ balance, minBet, maxBet, lastBet, onPlaceBet }: Be
     return (
         <View style={styles.container}>
             <BetCounter amount={pendingBet} />
-            <ChipTray balance={balance} maxBet={maxBet} pendingBet={pendingBet} onChip={handleChip} />
+            <ChipTray balance={balance} pendingBet={pendingBet} onChip={handleChip} />
             <ActionRow
                 canDeal={canDeal}
                 canRepeat={canRepeat}
@@ -59,20 +58,14 @@ const BetCounter = ({ amount }: BetCounterProps): JSX.Element => (
 
 type ChipTrayProps = {
     balance: number;
-    maxBet: number;
     pendingBet: number;
     onChip: (chip: ChipDenomination) => void;
 };
 
-const ChipTray = ({ balance, maxBet, pendingBet, onChip }: ChipTrayProps): JSX.Element => (
+const ChipTray = ({ balance, pendingBet, onChip }: ChipTrayProps): JSX.Element => (
     <View style={styles.tray}>
         {CHIP_DENOMINATIONS.map((denom) => (
-            <AnimatedChip
-                key={denom}
-                denom={denom}
-                disabled={pendingBet + denom > Math.min(balance, maxBet)}
-                onChip={onChip}
-            />
+            <AnimatedChip key={denom} denom={denom} disabled={pendingBet + denom > balance} onChip={onChip} />
         ))}
     </View>
 );
