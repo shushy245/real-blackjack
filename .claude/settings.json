@@ -1,6 +1,9 @@
 {
     "permissions": {
-        "allow": []
+        "allow": [
+            "Bash(npx jest --no-coverage *)",
+            "Bash(npx eslint *)"
+        ]
     },
     "hooks": {
         "Stop": [
