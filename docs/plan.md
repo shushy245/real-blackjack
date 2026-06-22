@@ -707,13 +707,13 @@ const handlePress = (): void => {
 
 ---
 
-## Story BF6 — CQ1 Code Quality Audit Fixes
+## Story BF6 — CQ1 Code Quality Audit Fixes ✅ DONE 2026-06-19
 
-**Source:** CQ1 max-effort review of both packages (2026-06-19). 15 findings.
+**Source:** CQ1 max-effort review of both packages (2026-06-19). 15 findings. All fixed; 131 tests green.
 
 ---
 
-**BF6-1 (HIGH) — Split-ace + ten-value card incorrectly pays 1.5× blackjack payout** (`payouts.ts:31`, `hand.ts:47`)
+**BF6-1 (HIGH) — Split-ace + ten-value card incorrectly pays 1.5× blackjack payout** ✅ (`payouts.ts:31`, `hand.ts:47`)
 
 `isBlackjack` returns `true` for any 2-card soft-21, including a hand produced by splitting aces. In `settleHand`, a `playerBJ = true` hand where the dealer doesn't have BJ hits the `return { outcome: 'blackjack', payout: Math.floor(bet * 1.5) }` path. Standard casino rule: a natural 21 on a split hand is a regular win (1:1), not a natural blackjack (3:2). The plan resolves "Blackjack payout: 3:2" for naturals but is silent on split hands; standard rules apply.
 
@@ -721,7 +721,7 @@ Fix: pass a `splitHand` boolean into `settleHand` (derived from `playerHands.len
 
 ---
 
-**BF6-2 (HIGH) — `newGame()` discards the session without recording it in the leaderboard** (`game-store.ts:51`)
+**BF6-2 (HIGH) — `newGame()` discards the session without recording it in the leaderboard** ✅ (`game-store.ts:51`)
 
 When balance drops below `GAME_CONFIG.minBet`, `TableLayout` shows a Game Over panel whose NEW GAME button calls `newGame()`. `newGame()` does `set({ gameState: createGame(GAME_CONFIG), lastBet: 0 })` without calling `onSessionEnd`. `cashOut()` (lines 53–57) correctly calls `onSessionEnd` first but is hidden when `isGameOver` is true. Any session ending in a bust is silently discarded from the leaderboard regardless of peak.
 
@@ -729,7 +729,7 @@ Fix: at the start of `newGame()`, call `onSessionEnd({ peak: get().gameState.ses
 
 ---
 
-**BF6-3 (MEDIUM) — Split offered when player cannot fund the second hand** (`legal-moves.ts:16`, `round.ts:applySplit`)
+**BF6-3 (MEDIUM) — Split offered when player cannot fund the second hand** ✅ (`legal-moves.ts:16`, `round.ts:applySplit`)
 
 `getLegalMoves` guards `Double` with `state.balance >= state.activeBet` but offers `Split` unconditionally. Combined with `applySplit` not deducting from `round.balance`, a player with $15 balance can bet $10, receive a pair, and split — placing $10 on a second hand they cannot fund.
 
@@ -737,7 +737,7 @@ Fix: add `state.balance >= state.originalBet` to the Split eligibility guard in 
 
 ---
 
-**BF6-4 (MEDIUM) — SoundsProvider async race: sounds loaded after unmount are never unloaded** (`SoundsProvider.tsx:62`)
+**BF6-4 (MEDIUM) — SoundsProvider async race: sounds loaded after unmount are never unloaded** ✅ (`SoundsProvider.tsx:62`)
 
 If `SoundsProvider` unmounts while `Promise.all` is pending, the cleanup runs with all refs still `undefined` — all `unloadAsync()` calls are no-ops. When `load()` later resolves, it assigns five `Audio.Sound` objects to stale refs that no cleanup will ever free.
 
@@ -745,7 +745,7 @@ Fix: add a `cancelled` boolean flag in the effect. After `await Promise.all`, ch
 
 ---
 
-**BF6-5 (MEDIUM) — `let` with reassignment in `calculateHand`** (`hand.ts:25`)
+**BF6-5 (MEDIUM) — `let` with reassignment in `calculateHand`** ✅ (`hand.ts:25`)
 
 `let value` and `let softAces` are mutated across a `for` loop and a `while` loop. Violates CLAUDE.md: **"`const` only — never `let` with reassignment."**
 
@@ -753,7 +753,7 @@ Fix: derive `rawValue` and `aceCount` with `reduce`/`filter`, then compute `soft
 
 ---
 
-**BF6-6 (MEDIUM) — `let` with reassignment in `runDealerTurn`** (`round.ts:203`)
+**BF6-6 (MEDIUM) — `let` with reassignment in `runDealerTurn`** ✅ (`round.ts:203`)
 
 `let dealerCards` and `let shoe` are fully reassigned on each while-loop iteration. Same CLAUDE.md const-only violation.
 
@@ -761,7 +761,7 @@ Fix: extract a recursive helper `const dealUntilStand = (cards, shoe) => shouldD
 
 ---
 
-**BF6-7 (MEDIUM) — `sounds` missing from `useEffect` dependency array in `useResultFeedback`** (`useResultFeedback.ts:58`)
+**BF6-7 (MEDIUM) — `sounds` missing from `useEffect` dependency array in `useResultFeedback`** ✅ (`useResultFeedback.ts:58`)
 
 `sounds.win()` and `sounds.bust()` are called inside the effect but `sounds` is absent from `[round]`. `SoundsProvider` creates a new `SoundEffects` object literal on every render (BF6-10), so `sounds` can be a stale reference. Currently safe because `playRef` closes over stable refs; becomes a silent breakage if the provider adds reactive state.
 
@@ -769,7 +769,7 @@ Fix: add `sounds` to the dep array. Pair with BF6-10 to prevent the effect firin
 
 ---
 
-**BF6-8 (MEDIUM) — `sounds` missing from `useEffect` dependency array in `FlippableCard`** (`FlippableCard.tsx:28`)
+**BF6-8 (MEDIUM) — `sounds` missing from `useEffect` dependency array in `FlippableCard`** ✅ (`FlippableCard.tsx:28`)
 
 `sounds.flip()` is called inside `[flipped, progress]` without `sounds` in the array. Same stale-closure risk as BF6-7.
 
@@ -777,7 +777,7 @@ Fix: add `sounds` to the dep array. Pair with BF6-10.
 
 ---
 
-**BF6-9 (MEDIUM) — `FlippableCard` plays `sounds.flip()` on initial mount when `flipped=true`** (`FlippableCard.tsx:20`)
+**BF6-9 (MEDIUM) — `FlippableCard` plays `sounds.flip()` on initial mount when `flipped=true`** ✅ (`FlippableCard.tsx:20`)
 
 The `useEffect` runs on mount. If the component mounts with `flipped=true`, `sounds.flip()` fires immediately with no visible animation (progress is already 1). This would occur on any re-mount of a revealed card.
 
@@ -785,7 +785,7 @@ Fix: add a `hasMounted` ref and skip the effect body on the first run: `if (!has
 
 ---
 
-**BF6-10 (LOW) — `SoundsProvider` context value recreated on every render** (`SoundsProvider.tsx:71`)
+**BF6-10 (LOW) — `SoundsProvider` context value recreated on every render** ✅ (`SoundsProvider.tsx:71`)
 
 `const value: SoundEffects = { ... }` is a new object on each render, causing React context to re-render all `useSoundEffects()` consumers unnecessarily.
 
@@ -793,7 +793,7 @@ Fix: wrap in `useMemo(() => ({ deal, flip, chip, win, bust }), [])` — all five
 
 ---
 
-**BF6-11 (LOW) — `game-store` subscribe fires on every state change** (`game-store.ts:60`)
+**BF6-11 (LOW) — `game-store` subscribe fires on every state change** ✅ (`game-store.ts:60`)
 
 The bare `store.subscribe(callback)` runs after every Zustand update including `Hit`, `Stand`, `RunDealerTurn` — actions that don't change `balance`. That's 4–6 unnecessary MMKV writes per round.
 
@@ -801,7 +801,7 @@ Fix: use selector-based subscribe: `store.subscribe((s) => s.gameState.balance, 
 
 ---
 
-**BF6-12 (LOW) — `localeCompare` is locale-dependent for ISO 8601 date strings** (`leaderboard-store.ts:46`)
+**BF6-12 (LOW) — `localeCompare` is locale-dependent for ISO 8601 date strings** ✅ (`leaderboard-store.ts:46`)
 
 `b.date.localeCompare(a.date)` uses the device's runtime locale collation and can mis-sort dates on some Android locales that apply numeric collation.
 
@@ -809,7 +809,7 @@ Fix: ISO 8601 strings sort correctly with plain comparison: `b.date > a.date ? -
 
 ---
 
-**BF6-13 (LOW) — `parseInt` silently accepts partial numeric input for stored balance** (`store/index.ts:21`)
+**BF6-13 (LOW) — `parseInt` silently accepts partial numeric input for stored balance** ✅ (`store/index.ts:21`)
 
 `parseInt('1500garbage', 10)` returns `1500`, passing the `Number.isFinite` and `> 0` guards. `Number('1500garbage')` returns `NaN` and is caught.
 
@@ -817,7 +817,7 @@ Fix: replace `parseInt(rawBalance, 10)` with `Number(rawBalance)`. Add `Number.i
 
 ---
 
-**BF6-14 (LOW) — Balance validity predicate duplicated across two files** (`store/index.ts:22`, `game-store.ts:32`)
+**BF6-14 (LOW) — Balance validity predicate duplicated across two files** ✅ (`store/index.ts:22`, `game-store.ts:32`)
 
 `n !== undefined && Number.isFinite(n) && n > 0` appears verbatim in both files. One source of truth for this rule.
 
@@ -825,11 +825,35 @@ Fix: extract `const isValidBalance = (n: number | undefined): n is number => n !
 
 ---
 
-**BF6-15 (LOW) — Void arrow event handlers omit braces** (`screens/table/TableLayout.tsx:30`)
+**BF6-15 (LOW) — Void arrow event handlers omit braces** ✅ (`screens/table/TableLayout.tsx:30`)
 
 `handlePlaceBet`, `handleMove`, and `handleCollect` use the implicit-return arrow form on void side-effectful calls. CLAUDE.md: **"void or side-effectful functions keep braces."**
 
 Fix: add explicit braces: `const handlePlaceBet = (amount: number): void => { storeAction({ type: 'PlaceBet', amount }); }` etc.
+
+---
+
+## Story BF7 — BF6 Code Review Follow-ups ✅ DONE 2026-06-19
+
+**Source:** `/code-review high story/BF6` surfaced 10 findings. All fixed; 131 tests green.
+
+- **Engine:** added `splitOccurred: boolean` to `RoundState` (set in `applySplit`, cleared in `createRound`) — replaces structural `playerHands.length > 1` derivation; hoisted `dealUntilStand` to module scope; single-pass `calculateHand` reduce; removed `isBlackjack` import from `payouts.ts` and inlined BJ checks using already-computed `HandValue` *(later reverted in BF8 — see below)*
+- **App:** `FlippableCard` — replaced `hasMountedRef=useRef(false)` with `prevFlippedRef=useRef(flipped)` to correctly skip initial mount even under React Strict Mode double-invoke; `SoundsProvider` — `let cancelled` → `const control = { cancelled: false }` (const-only rule); braces added to `flip`/`chip` void arrows; `game-store` — extracted `endAndReset` helper eliminating duplicate `newGame`/`cashOut` bodies (explicit return form)
+
+---
+
+## Story BF8 — BF7 Code Review Follow-ups ✅ DONE 2026-06-19
+
+**Source:** `/code-review high story/BF7` surfaced 2 findings. Both fixed; 131 tests green.
+
+- **BF8-1** (`payouts.ts`): re-imported `isBlackjack` for both `playerBJ` and `dealerBJ` checks — BF7 had inlined the three-condition expression twice, creating a knowledge fork against the canonical helper still used in `round.ts` and `TableLayout.tsx`
+- **BF8-2** (`game-store.ts`): added braces to the `action` arrow (`(move) => set(...)` → `(move) => { set(...); }`) — void/side-effectful arrow must keep braces per CLAUDE.md
+
+---
+
+## Known Open Issues (pre-existing, not blocking)
+
+**FlippableCard reverse-flip snap** — when a round ends and a new one starts, the hole-card `FlippableCard` instance is reused (keyed by index). `holeRevealed` resets `true → false`, hitting `progress.value = 0` — an instant snap rather than an animated reverse flip. Pre-dates BF6; surfaced during BF7 review but refuted as in-scope for that story. Low visual impact (happens quickly at round reset). Fix: replace `progress.value = 0` with `withTiming(0, { duration: FLIP_DURATION_MS })` in the `false` branch of the effect.
 
 ---
 
