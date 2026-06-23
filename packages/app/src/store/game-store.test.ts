@@ -75,8 +75,9 @@ describe('cashOut', () => {
         gameStore.getState().cashOut();
 
         const session = leaderboardStore.getState().sessions[0];
-        expect(session?.endBalance).toBe(1000);
-        expect(session?.peak).toBe(1000);
+        if (session === undefined) throw new Error('expected session at index 0');
+        expect(session.endBalance).toBe(1000);
+        expect(session.peak).toBe(1000);
     });
 
     it('resets game to the starting balance', () => {

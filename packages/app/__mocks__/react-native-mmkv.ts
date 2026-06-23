@@ -4,7 +4,7 @@ export class MMKV {
     private readonly store: Map<string, string>;
 
     constructor(config?: { id?: string }) {
-        const id = config?.id ?? 'default';
+        const id = config !== undefined ? (config.id ?? 'default') : 'default';
         let store = stores.get(id);
         if (store === undefined) {
             store = new Map();

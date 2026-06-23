@@ -103,8 +103,9 @@ describe('settleRound', () => {
         const hit = applyRoundAction(round, { type: Move.Hit });
         const settled = runDealerTurn(hit);
         const { netDelta, handResults } = settleRound(settled);
-
-        expect(handResults[0]?.outcome).toBe('lose');
+        const result0 = handResults[0];
+        if (result0 === undefined) throw new Error('expected handResult at index 0');
+        expect(result0.outcome).toBe('lose');
         expect(netDelta).toBeLessThan(0);
     });
 
@@ -121,8 +122,9 @@ describe('settleRound', () => {
         const stood = applyRoundAction(round, { type: Move.Stand });
         const settled = runDealerTurn(stood);
         const { netDelta, handResults } = settleRound(settled);
-
-        expect(handResults[0]?.outcome).toBe('win');
+        const result0 = handResults[0];
+        if (result0 === undefined) throw new Error('expected handResult at index 0');
+        expect(result0.outcome).toBe('win');
         expect(netDelta).toBe(50);
     });
 
@@ -139,8 +141,9 @@ describe('settleRound', () => {
         const stood = applyRoundAction(round, { type: Move.Stand });
         const settled = runDealerTurn(stood);
         const { netDelta, handResults } = settleRound(settled);
-
-        expect(handResults[0]?.outcome).toBe('win');
+        const result0 = handResults[0];
+        if (result0 === undefined) throw new Error('expected handResult at index 0');
+        expect(result0.outcome).toBe('win');
         expect(netDelta).toBe(50);
     });
 
@@ -156,8 +159,9 @@ describe('settleRound', () => {
         const stood = applyRoundAction(round, { type: Move.Stand });
         const settled = runDealerTurn(stood);
         const { netDelta, handResults } = settleRound(settled);
-
-        expect(handResults[0]?.outcome).toBe('push');
+        const result0 = handResults[0];
+        if (result0 === undefined) throw new Error('expected handResult at index 0');
+        expect(result0.outcome).toBe('push');
         expect(netDelta).toBe(0);
     });
 
@@ -172,8 +176,9 @@ describe('settleRound', () => {
         const round = createRound(50, 500, shoe);
         // round is already 'settling' due to player BJ
         const { netDelta, handResults } = settleRound(round);
-
-        expect(handResults[0]?.outcome).toBe('blackjack');
+        const result0 = handResults[0];
+        if (result0 === undefined) throw new Error('expected handResult at index 0');
+        expect(result0.outcome).toBe('blackjack');
         expect(netDelta).toBe(75); // 3:2 on 50 = 75
     });
 
@@ -187,8 +192,9 @@ describe('settleRound', () => {
         ]).build();
         const round = createRound(50, 500, shoe);
         const { netDelta, handResults } = settleRound(round);
-
-        expect(handResults[0]?.outcome).toBe('push');
+        const result0 = handResults[0];
+        if (result0 === undefined) throw new Error('expected handResult at index 0');
+        expect(result0.outcome).toBe('push');
         expect(netDelta).toBe(0);
     });
 
@@ -242,8 +248,10 @@ describe('settleRound', () => {
         }).build();
         const { handResults } = settleRound(splitRound);
 
-        expect(handResults[0]?.outcome).toBe('win'); // not 'blackjack'
-        expect(handResults[0]?.payout).toBe(50); // 1:1, not 75 (3:2)
+        const result0 = handResults[0];
+        if (result0 === undefined) throw new Error('expected handResult at index 0');
+        expect(result0.outcome).toBe('win'); // not 'blackjack'
+        expect(result0.payout).toBe(50); // 1:1, not 75 (3:2)
     });
 
     it('insurance + dealer no BJ → insurance lost; original bet settles normally', () => {

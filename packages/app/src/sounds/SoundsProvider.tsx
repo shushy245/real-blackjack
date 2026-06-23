@@ -30,7 +30,8 @@ const BUST_ASSET = require('../../assets/sounds/bust.wav');
 /* eslint-enable @typescript-eslint/no-var-requires */
 
 const playRef = (ref: MutableRefObject<Audio.Sound | undefined>): void => {
-    ref.current?.replayAsync().catch(() => {});
+    if (ref.current === undefined) return;
+    ref.current.replayAsync().catch(() => {});
 };
 
 export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Element => {
@@ -72,7 +73,8 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
         return () => {
             control.cancelled = true;
             allRefs.forEach((ref) => {
-                ref.current?.unloadAsync().catch(() => {});
+                if (ref.current === undefined) return;
+                ref.current.unloadAsync().catch(() => {});
             });
         };
     }, []);

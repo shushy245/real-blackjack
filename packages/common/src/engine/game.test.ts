@@ -66,21 +66,24 @@ describe('applyAction — player moves', () => {
 
     it('applies a player move to the active round', () => {
         const game = startRound();
-        if (game.round?.phase !== 'player-action') return; // skip if BJ/insurance dealt
+        if (game.round === undefined || game.round.phase !== 'player-action') return; // skip if BJ/insurance dealt
 
         const next = applyAction(game, { type: Move.Hit });
 
-        expect(next.round?.playerHands[0]?.length).toBeGreaterThan(2);
+        if (next.round === undefined) throw new Error('expected round after hit');
+        const hand0 = next.round.playerHands[0];
+        if (hand0 === undefined) throw new Error('expected hand at index 0');
+        expect(hand0.length).toBeGreaterThan(2);
     });
 
     it('updates balance when round settles after player busts', () => {
         // Drive the game to bust via repeated hits
         let game = startRound();
-        while (game.round?.phase === 'player-action') {
+        while (game.round !== undefined && game.round.phase === 'player-action') {
             game = applyAction(game, { type: Move.Hit });
         }
         // If round ended in settling, apply one more no-op to see balance
-        if (game.round?.phase === 'settling') {
+        if (game.round !== undefined && game.round.phase === 'settling') {
             const settled = applyAction(game, { type: 'CollectResult' });
 
             expect(settled.balance).toBeLessThanOrEqual(1000);

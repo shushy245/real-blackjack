@@ -25,13 +25,13 @@ const buildFlashAnimation = () =>
     );
 
 export const useResultFeedback = (round: RoundState | undefined): ResultFeedbackStyles => {
-    const prevPhaseRef = useRef(round?.phase);
+    const prevPhaseRef = useRef(round !== undefined ? round.phase : undefined);
     const winFlash = useSharedValue(0);
     const bustFlash = useSharedValue(0);
     const sounds = useSoundEffects();
 
     useEffect(() => {
-        const phase = round?.phase;
+        const phase = round !== undefined ? round.phase : undefined;
         const prevPhase = prevPhaseRef.current;
         prevPhaseRef.current = phase;
 

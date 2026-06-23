@@ -48,7 +48,7 @@ export const makeGameStore = ({
                 set((state) => {
                     const afterMove = applyAction(state.gameState, move);
                     const gameState =
-                        afterMove.round?.phase === 'dealer-turn'
+                        afterMove.round !== undefined && afterMove.round.phase === 'dealer-turn'
                             ? applyAction(afterMove, { type: 'RunDealerTurn' })
                             : afterMove;
 
