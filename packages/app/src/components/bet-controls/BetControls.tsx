@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } 
 
 import { useSoundEffects } from '~/sounds';
 
-import { CHIP_DENOMINATIONS, type ChipDenomination, clampBet, chipConfigMap, formatAmount } from './BetControls.utils';
+import { CHIP_DENOMINATIONS, type ChipDenomination, chipConfigMap, clampBet, formatAmount } from './BetControls.utils';
 
 type BetControlsProps = {
     balance: number;

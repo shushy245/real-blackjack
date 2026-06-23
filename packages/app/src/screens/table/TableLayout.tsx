@@ -1,11 +1,11 @@
 import type { JSX } from 'react';
 import type { TextStyle } from 'react-native';
+import type { RoundState } from '@real-blackjack/common';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { HandResult, RoundState } from '@real-blackjack/common';
+import { Move, getLegalMoves, settleRound } from '@real-blackjack/common';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Move, calculateHand, getLegalMoves, isBlackjack, settleRound } from '@real-blackjack/common';
 
 import { FullColumn } from '~/components/ui';
 import { ActionBar } from '~/components/action-bar';
@@ -13,6 +13,13 @@ import { GAME_CONFIG, useGameStore } from '~/store';
 import { BetControls } from '~/components/bet-controls';
 import { DealerHand, PlayerHand } from '~/components/hand';
 import { useResultFeedback } from '~/animations/useResultFeedback';
+
+import {
+    type ResultVariant,
+    buildAmountText,
+    buildResultVariant,
+    isGameOver as checkGameOver,
+} from './TableLayout.utils';
 
 const FELT = '#0D5C2E';
 const RAIL = '#2C1204';
@@ -45,7 +52,7 @@ export const TableLayout = (): JSX.Element => {
     };
 
     const legalMoves = getLegalMoves(gameState);
-    const isGameOver = round === undefined && balance < GAME_CONFIG.minBet;
+    const isGameOver = round === undefined && checkGameOver(balance);
     const canCashOut = round === undefined && !isGameOver;
 
     return (
@@ -117,12 +124,7 @@ const DealerZone = ({ round }: DealerZoneProps): JSX.Element => {
 
     return (
         <View style={styles.dealerZone}>
-            <DealerHand
-                cards={round.dealerCards}
-                hand={calculateHand(round.dealerCards)}
-                isBlackjack={isBlackjack(round.dealerCards)}
-                holeRevealed={round.holeCardRevealed}
-            />
+            <DealerHand hand={round.dealerHand} holeRevealed={round.holeCardRevealed} />
         </View>
     );
 };
@@ -246,32 +248,13 @@ const PlayerZonePanel = ({ round, legalMoves, onMove }: PlayerZonePanelProps): J
                         entering={FadeIn.springify()}
                         style={i === round.activeHandIndex ? undefined : styles.handInactive}
                     >
-                        <PlayerHand cards={hand} hand={calculateHand(hand)} isBlackjack={isBlackjack(hand)} />
+                        <PlayerHand hand={hand} />
                     </Animated.View>
                 ))}
             </Animated.View>
             {showActions && <ActionBar moves={legalMoves} phase={round.phase} onMove={onMove} />}
         </View>
     );
-};
-
-// ─── settle helpers ────────────────────────────────────────────────────────────
-
-type ResultVariant = 'blackjack' | 'win' | 'lost' | 'push';
-
-const buildResultVariant = (handResults: HandResult[], netDelta: number): ResultVariant => {
-    if (handResults.some((r) => r.outcome === 'blackjack')) return 'blackjack';
-    if (netDelta > 0) return 'win';
-    if (netDelta < 0) return 'lost';
-
-    return 'push';
-};
-
-const buildAmountText = (netDelta: number): string => {
-    if (netDelta > 0) return `+$${netDelta}`;
-    if (netDelta < 0) return `-$${Math.abs(netDelta)}`;
-
-    return '';
 };
 
 const resultLabelMap: Record<ResultVariant, string> = {

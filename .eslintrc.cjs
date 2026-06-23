@@ -233,9 +233,16 @@ module.exports = {
                         message: 'Use {`backticks`} for JSX text expressions, not quoted strings.',
                     },
                     // ── Builder pattern: no inline domain object factories in test files ──
+                    // Catches: const f = (): AnyType => ({ ... }) — implicit arrow with object body
+                    {
+                        selector: 'ArrowFunctionExpression[returnType][body.type="ObjectExpression"]',
+                        message:
+                            'Define domain object builders in testkit/builders/ — never inline factory functions in test files.',
+                    },
+                    // Catches: const f = (): T => { return {...}; } and function f(): T { return {...}; }
                     {
                         selector:
-                            ':matches(ArrowFunctionExpression, FunctionExpression, FunctionDeclaration)[returnType.typeAnnotation.typeName.name=/^(Card|Shoe|RoundState|GameState)$/]',
+                            ':matches(ArrowFunctionExpression, FunctionExpression, FunctionDeclaration)[returnType]:has(ReturnStatement ObjectExpression)',
                         message:
                             'Define domain object builders in testkit/builders/ — never inline factory functions in test files.',
                     },
