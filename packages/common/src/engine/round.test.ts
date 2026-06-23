@@ -1,18 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
 import { createRng } from './rng';
-import type { Shoe } from './shoe';
 import { createShoe } from './shoe';
 import type { Card } from './types';
 import { Move, Rank, Suit } from './types';
+import { aCard, aShoe } from '../testkit/builders';
 import { applyRoundAction, createRound } from './round';
 
-const card = (rank: Rank, suit = Suit.Spades): Card => ({ rank, suit });
+// first 4 cards: player gets 7,9 (hard 16); dealer gets 6 (up), K (hole) — no BJ, player-action
+const actionRound = (extraCards: Card[], balance = 500, bet = 50) => {
+    const shoe = aShoe([
+        aCard({ rank: Rank.Seven }).build(),
+        aCard({ rank: Rank.Six }).build(),
+        aCard({ rank: Rank.Nine }).build(),
+        aCard({ rank: Rank.King }).build(),
+        ...extraCards,
+    ]).build();
 
-const shoeWith = (cards: Card[]): Shoe => ({
-    cards: [...cards, ...Array(312 - cards.length).fill(card(Rank.Two))],
-    dealtCount: 0,
-});
+    return createRound(bet, balance, shoe);
+};
 
 describe('createRound — deal phase', () => {
     it('player has 2 cards and dealer has 2 cards after deal', () => {
@@ -40,7 +46,12 @@ describe('createRound — deal phase', () => {
 
     it('phase is player-action when neither player nor dealer has blackjack', () => {
         // 7♠ 6♠ 9♠ K♠ → player: 7,9 (16) | dealer: 6,K (16) — no BJ
-        const shoe = shoeWith([card(Rank.Seven), card(Rank.Six), card(Rank.Nine), card(Rank.King)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Seven }).build(),
+            aCard({ rank: Rank.Six }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+            aCard({ rank: Rank.King }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('player-action');
@@ -48,7 +59,12 @@ describe('createRound — deal phase', () => {
 
     it('phase is settling when player has blackjack and dealer up card is not Ace or 10-value', () => {
         // A♠ 6♠ K♠ 9♠ → player: A,K (BJ) | dealer up: 6 — peek finds no BJ → settle
-        const shoe = shoeWith([card(Rank.Ace), card(Rank.Six), card(Rank.King), card(Rank.Nine)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Ace }).build(),
+            aCard({ rank: Rank.Six }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('settling');
@@ -56,7 +72,12 @@ describe('createRound — deal phase', () => {
 
     it('hole card is revealed when player has blackjack and round goes directly to settling', () => {
         // A♠ 6♠ K♠ 9♠ → player: A,K (BJ) | dealer up: 6 — holeCard must be face-up at settlement
-        const shoe = shoeWith([card(Rank.Ace), card(Rank.Six), card(Rank.King), card(Rank.Nine)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Ace }).build(),
+            aCard({ rank: Rank.Six }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
 
         expect(round.holeCardRevealed).toBe(true);
@@ -64,12 +85,12 @@ describe('createRound — deal phase', () => {
 
     it('phase is insurance-pending when player has blackjack and dealer shows Ace', () => {
         // A♠ A♥ K♠ 9♠ → player: A,K (BJ) | dealer up: A — offer insurance
-        const shoe = shoeWith([
-            card(Rank.Ace, Suit.Spades),
-            card(Rank.Ace, Suit.Hearts),
-            card(Rank.King),
-            card(Rank.Nine),
-        ]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Ace, suit: Suit.Spades }).build(),
+            aCard({ rank: Rank.Ace, suit: Suit.Hearts }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('insurance-pending');
@@ -77,7 +98,12 @@ describe('createRound — deal phase', () => {
 
     it('phase is settling when dealer has blackjack and up card is not Ace (peek reveals BJ)', () => {
         // 7♠ K♠ 9♠ A♠ → player: 7,9 (16) | dealer: K(up),A(hole) — peek finds BJ → settle
-        const shoe = shoeWith([card(Rank.Seven), card(Rank.King), card(Rank.Nine), card(Rank.Ace)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Seven }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+            aCard({ rank: Rank.Ace }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('settling');
@@ -85,7 +111,12 @@ describe('createRound — deal phase', () => {
 
     it('phase is insurance-pending when dealer shows Ace and has BJ in hole (insurance offered first)', () => {
         // 7♠ A♥ 9♠ K♠ → player: 7,9 (16) | dealer: A(up),K(hole)=BJ — must offer insurance first
-        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Seven }).build(),
+            aCard({ rank: Rank.Ace }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+            aCard({ rank: Rank.King }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('insurance-pending');
@@ -93,17 +124,9 @@ describe('createRound — deal phase', () => {
     });
 });
 
-// Helper: build a player-action round with controlled shoe cards after the initial 4-card deal
-const actionRound = (extraCards: Card[], balance = 500, bet = 50) => {
-    // first 4 cards: player gets 7,9 (hard 16); dealer gets 6 (up), K (hole) — no BJ, player-action
-    const shoe = shoeWith([card(Rank.Seven), card(Rank.Six), card(Rank.Nine), card(Rank.King), ...extraCards]);
-
-    return createRound(bet, balance, shoe);
-};
-
 describe('applyRoundAction — Hit', () => {
     it('adds a card to the active hand', () => {
-        const round = actionRound([card(Rank.Three)]);
+        const round = actionRound([aCard({ rank: Rank.Three }).build()]);
         const next = applyRoundAction(round, { type: Move.Hit });
 
         expect(next.playerHands[0]).toHaveLength(3);
@@ -111,7 +134,7 @@ describe('applyRoundAction — Hit', () => {
 
     it('busting the only hand moves to dealer-turn', () => {
         // player has 7,9 (16); hit a King → 26 → bust
-        const round = actionRound([card(Rank.King)]);
+        const round = actionRound([aCard({ rank: Rank.King }).build()]);
         const next = applyRoundAction(round, { type: Move.Hit });
 
         expect(next.phase).toBe('dealer-turn');
@@ -119,14 +142,14 @@ describe('applyRoundAction — Hit', () => {
 
     it('reaching exactly 21 auto-stands and moves to dealer-turn (single hand)', () => {
         // player has 7,9 (16); hit a Five → 21 → auto-stand
-        const round = actionRound([card(Rank.Five)]);
+        const round = actionRound([aCard({ rank: Rank.Five }).build()]);
         const next = applyRoundAction(round, { type: Move.Hit });
 
         expect(next.phase).toBe('dealer-turn');
     });
 
     it('non-bust hit on single hand stays in player-action', () => {
-        const round = actionRound([card(Rank.Three)]);
+        const round = actionRound([aCard({ rank: Rank.Three }).build()]);
         const next = applyRoundAction(round, { type: Move.Hit });
 
         expect(next.phase).toBe('player-action');
@@ -143,10 +166,13 @@ describe('applyRoundAction — Stand', () => {
 
     it('advances activeHandIndex when more hands remain', () => {
         // two-hand split scenario: start with activeHandIndex 0, two hands present
-        const base = actionRound([card(Rank.Three)]);
+        const base = actionRound([aCard({ rank: Rank.Three }).build()]);
         const twoHand: typeof base = {
             ...base,
-            playerHands: [base.playerHands[0] ?? [], [card(Rank.Nine), card(Rank.Three)]],
+            playerHands: [
+                base.playerHands[0] ?? [],
+                [aCard({ rank: Rank.Nine }).build(), aCard({ rank: Rank.Three }).build()],
+            ],
             handBets: [50, 50],
             activeHandIndex: 0,
         };
@@ -159,7 +185,7 @@ describe('applyRoundAction — Stand', () => {
 
 describe('applyRoundAction — Double', () => {
     it('doubles activeBet and deducts from balance', () => {
-        const round = actionRound([card(Rank.Three)]);
+        const round = actionRound([aCard({ rank: Rank.Three }).build()]);
         const next = applyRoundAction(round, { type: Move.Double });
 
         expect(next.activeBet).toBe(100);
@@ -167,7 +193,7 @@ describe('applyRoundAction — Double', () => {
     });
 
     it('deals exactly one card then auto-stands', () => {
-        const round = actionRound([card(Rank.Three)]);
+        const round = actionRound([aCard({ rank: Rank.Three }).build()]);
         const next = applyRoundAction(round, { type: Move.Double });
 
         expect(next.playerHands[0]).toHaveLength(3);
@@ -178,14 +204,14 @@ describe('applyRoundAction — Double', () => {
 describe('applyRoundAction — Split', () => {
     it('creates two hands from a pair', () => {
         // player starts with 8,8 (pair)
-        const shoe = shoeWith([
-            card(Rank.Eight, Suit.Hearts),
-            card(Rank.Six),
-            card(Rank.Eight, Suit.Spades),
-            card(Rank.King),
-            card(Rank.Three), // card dealt to first split hand
-            card(Rank.Four), // card dealt to second split hand
-        ]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Eight, suit: Suit.Hearts }).build(),
+            aCard({ rank: Rank.Six }).build(),
+            aCard({ rank: Rank.Eight, suit: Suit.Spades }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Three }).build(),
+            aCard({ rank: Rank.Four }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Split });
 
@@ -196,14 +222,14 @@ describe('applyRoundAction — Split', () => {
     });
 
     it('deducts originalBet from balance', () => {
-        const shoe = shoeWith([
-            card(Rank.Eight, Suit.Hearts),
-            card(Rank.Six),
-            card(Rank.Eight, Suit.Spades),
-            card(Rank.King),
-            card(Rank.Three),
-            card(Rank.Four),
-        ]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Eight, suit: Suit.Hearts }).build(),
+            aCard({ rank: Rank.Six }).build(),
+            aCard({ rank: Rank.Eight, suit: Suit.Spades }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Three }).build(),
+            aCard({ rank: Rank.Four }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Split });
 
@@ -215,10 +241,13 @@ describe('applyRoundAction — Split', () => {
         const fourHands: typeof base = {
             ...base,
             playerHands: [
-                [card(Rank.Eight, Suit.Hearts), card(Rank.Eight, Suit.Spades)],
-                [card(Rank.Eight, Suit.Clubs), card(Rank.Three)],
-                [card(Rank.Eight, Suit.Diamonds), card(Rank.Five)],
-                [card(Rank.Two), card(Rank.Four)],
+                [
+                    aCard({ rank: Rank.Eight, suit: Suit.Hearts }).build(),
+                    aCard({ rank: Rank.Eight, suit: Suit.Spades }).build(),
+                ],
+                [aCard({ rank: Rank.Eight, suit: Suit.Clubs }).build(), aCard({ rank: Rank.Three }).build()],
+                [aCard({ rank: Rank.Eight, suit: Suit.Diamonds }).build(), aCard({ rank: Rank.Five }).build()],
+                [aCard({ rank: Rank.Two }).build(), aCard({ rank: Rank.Four }).build()],
             ],
             handBets: [50, 50, 50, 50],
         };
@@ -229,7 +258,12 @@ describe('applyRoundAction — Split', () => {
 
 describe('applyRoundAction — Insurance', () => {
     it('accepted: deducts half bet from balance, sets insuranceBet, marks taken, moves to player-action', () => {
-        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.Three)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Seven }).build(),
+            aCard({ rank: Rank.Ace }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+            aCard({ rank: Rank.Three }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
 
         expect(round.phase).toBe('insurance-pending');
@@ -242,7 +276,12 @@ describe('applyRoundAction — Insurance', () => {
     });
 
     it('declined (Stand as decline): insuranceTaken set true (prevents re-offer), no insuranceBet, phase → player-action', () => {
-        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.Three)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Seven }).build(),
+            aCard({ rank: Rank.Ace }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+            aCard({ rank: Rank.Three }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Stand });
 
@@ -253,7 +292,12 @@ describe('applyRoundAction — Insurance', () => {
 
     it('accepting insurance when dealer has BJ: phase → settling with hole revealed', () => {
         // dealer A(up)+K(hole)=BJ; player takes insurance → immediate settle
-        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Seven }).build(),
+            aCard({ rank: Rank.Ace }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+            aCard({ rank: Rank.King }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
         expect(round.phase).toBe('insurance-pending');
         const next = applyRoundAction(round, { type: Move.Insurance });
@@ -265,7 +309,12 @@ describe('applyRoundAction — Insurance', () => {
     });
 
     it('declining insurance when dealer has BJ: phase → settling with hole revealed, insuranceTaken true, no insuranceBet', () => {
-        const shoe = shoeWith([card(Rank.Seven), card(Rank.Ace), card(Rank.Nine), card(Rank.King)]);
+        const shoe = aShoe([
+            aCard({ rank: Rank.Seven }).build(),
+            aCard({ rank: Rank.Ace }).build(),
+            aCard({ rank: Rank.Nine }).build(),
+            aCard({ rank: Rank.King }).build(),
+        ]).build();
         const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Stand });
 

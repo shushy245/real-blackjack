@@ -42,6 +42,11 @@ module.exports = {
         'no-restricted-syntax': [
             'error',
             {
+                selector: 'ChainExpression',
+                message:
+                    'Avoid optional chaining (?.). Either narrow the type so undefined is ruled out, or write an explicit guard clause (if (x === undefined) return ...).',
+            },
+            {
                 selector: 'Literal[value=null]',
                 message:
                     'Use undefined instead of null. Normalise null at the boundary (row-mappers.utils.ts, http-client.ts).',
@@ -201,12 +206,40 @@ module.exports = {
                 'no-restricted-syntax': 'off',
             },
         },
-        // ── Test files: relax some rules ─────────────────────────────────────────
+        // ── Test files: relax some rules + enforce builder pattern ───────────────
         {
             files: ['**/*.test.ts', '**/*.test.tsx', '**/cypress/**/*.ts', '**/cypress/**/*.tsx'],
             rules: {
                 '@typescript-eslint/explicit-module-boundary-types': 'off',
                 'no-console': 'off',
+                // Override replaces the global rule — repeat all global selectors here
+                'no-restricted-syntax': [
+                    'error',
+                    {
+                        selector: 'Literal[value=null]',
+                        message:
+                            'Use undefined instead of null. Normalise null at the boundary (row-mappers.utils.ts, http-client.ts).',
+                    },
+                    {
+                        selector: "JSXAttribute[name.name='data-testid'] > Literal",
+                        message: 'Use the component *TestIds object — never raw strings in data-testid.',
+                    },
+                    {
+                        selector: ':matches(JSXElement, JSXFragment) > JSXText[value=/\\S/]',
+                        message: 'Wrap JSX text nodes in {`backticks`} — even static ones.',
+                    },
+                    {
+                        selector: 'JSXExpressionContainer > Literal[value=type(string)]',
+                        message: 'Use {`backticks`} for JSX text expressions, not quoted strings.',
+                    },
+                    // ── Builder pattern: no inline domain object factories in test files ──
+                    {
+                        selector:
+                            ':matches(ArrowFunctionExpression, FunctionExpression, FunctionDeclaration)[returnType.typeAnnotation.typeName.name=/^(Card|Shoe|RoundState|GameState)$/]',
+                        message:
+                            'Define domain object builders in testkit/builders/ — never inline factory functions in test files.',
+                    },
+                ],
             },
         },
         // ── Config files ──────────────────────────────────────────────────────────
