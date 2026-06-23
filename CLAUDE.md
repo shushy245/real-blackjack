@@ -54,9 +54,9 @@ Single-player Blackjack — player vs dealer — iOS + Android from one codebase
 - BF7 complete (2026-06-19): 10 BF6 code-review follow-ups fixed (splitOccurred field, isBlackjack inlining, hasMountedRef→prevFlippedRef, const control, endAndReset extraction, single-pass calculateHand, dealUntilStand hoisted)
 - BF8 complete (2026-06-19): 2 BF7 code-review findings fixed (isBlackjack re-imported in payouts.ts; action arrow braces in game-store.ts); 131 tests green
 - RF1 complete (2026-06-23): Hand class refactor (`hand.ts` value object, `selectors.ts`, `RoundState.dealerHand: Hand`, `playerHands: readonly Hand[]`), DealerHand/PlayerHand updated to accept `Hand`, relational logic extracted to `*.utils.ts` across 4 app files, ESLint `no-restricted-syntax` ban on relational operators in `*.tsx`, BetControls driver+test (16 tests), jest `~` path alias wired; 157 tests green: 114 engine + 43 app
+- BF9-review complete (2026-06-24): 5 RF1 code-review findings fixed — `Hand.isUpCardAce()` added (eliminates 3-level chain in selectors.ts), `payouts.ts` caches `hand.value()` (removes redundant calculateHand call), `round.ts` applyHit simplified to `value().value >= 21`, direct unit tests added for `isFirstAction` and `isUpCardAce`; 162 tests green: 119 engine + 43 app
 
 ## What's next
-- **RF1 code review** — run `/code-review high story/RF1` before proceeding.
 - **Epic 6 — Gameplay Feel** (planned 2026-06-23): 5 stories in `docs/plan.md`. Order: A6.1 (flip speed) → A6.5 (default bet, no Repeat) → A6.2 (staggered dealer cards) → A6.3 (auto-advance, no Collect) → A6.4 (nicubunu ornamental card assets). Start with `git tag story/A6.1` before any code.
 - **EAS Build** — Android APK for device testing. Run `eas build --platform android --profile preview` once EAS credentials are configured.
 - **Pre-ship smoke test** — scan QR in Expo Go, play a full session (deal, hit, stand, double, split, insurance), cash out, verify leaderboard entry.
