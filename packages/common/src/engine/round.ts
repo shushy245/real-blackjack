@@ -10,7 +10,7 @@ export type RoundState = {
     readonly phase: RoundPhase;
     readonly shoe: Shoe;
     readonly playerHands: readonly (readonly Card[])[];
-    readonly dealerCards: readonly Card[];
+    readonly dealerCards: readonly [Card, ...Card[]];
     readonly holeCardRevealed: boolean;
     readonly activeHandIndex: number;
     readonly originalBet: number;
@@ -55,7 +55,7 @@ export const createRound = (bet: number, balance: number, shoe: Shoe): RoundStat
     const [d2, shoe4] = dealCard(shoe3);
 
     const playerHand: readonly Card[] = [p1, p2];
-    const dealerCards: readonly Card[] = [d1, d2];
+    const dealerCards: readonly [Card, Card] = [d1, d2];
 
     const { phase, holeCardRevealed } = resolveInitialPhase(playerHand, d1, d2);
 
@@ -206,7 +206,10 @@ export const applyRoundAction = (state: RoundState, action: PlayerAction): Round
     return handler(state);
 };
 
-const dealUntilStand = (cards: readonly Card[], shoe: Shoe): { cards: readonly Card[]; shoe: Shoe } => {
+const dealUntilStand = (
+    cards: readonly [Card, ...Card[]],
+    shoe: Shoe,
+): { cards: readonly [Card, ...Card[]]; shoe: Shoe } => {
     if (!shouldDealerHit(calculateHand(cards))) return { cards, shoe };
     const [newCard, newShoe] = dealCard(shoe);
 

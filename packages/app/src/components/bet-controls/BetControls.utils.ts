@@ -16,6 +16,14 @@ export const chipConfigMap: Record<ChipDenomination, ChipConfig> = {
     500: { color: '#3D1570', edgeColor: '#8040C0', label: '$500' },
 };
 
+export const BetControlsTestIds = {
+    BetCounter: 'BetControlsTestIds.BetCounter',
+    ChipButton: (denom: ChipDenomination): string => `BetControlsTestIds.ChipButton.${denom}`,
+    ClearButton: 'BetControlsTestIds.ClearButton',
+    RepeatButton: 'BetControlsTestIds.RepeatButton',
+    DealButton: 'BetControlsTestIds.DealButton',
+};
+
 export const clampBet = (current: number, added: number, balance: number): number => Math.min(current + added, balance);
 
 export const formatAmount = (amount: number): string => `$${amount}`;
