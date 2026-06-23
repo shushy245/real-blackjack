@@ -25,26 +25,27 @@ const buildFlashAnimation = () =>
     );
 
 export const useResultFeedback = (round: RoundState | undefined): ResultFeedbackStyles => {
-    const prevPhaseRef = useRef(round !== undefined ? round.phase : undefined);
+    const prevPhaseRef = useRef<RoundState['phase'] | undefined>(undefined);
     const winFlash = useSharedValue(0);
     const bustFlash = useSharedValue(0);
     const sounds = useSoundEffects();
 
     useEffect(() => {
-        const phase = round !== undefined ? round.phase : undefined;
+        if (round === undefined) {
+            if (prevPhaseRef.current === 'settling') {
+                winFlash.value = 0;
+                bustFlash.value = 0;
+            }
+            prevPhaseRef.current = undefined;
+
+            return;
+        }
+
+        const phase = round.phase;
         const prevPhase = prevPhaseRef.current;
         prevPhaseRef.current = phase;
 
-        if (prevPhase === 'settling' && phase !== 'settling') {
-            winFlash.value = 0;
-            bustFlash.value = 0;
-
-            return;
-        }
-
-        if (phase !== 'settling' || prevPhase === 'settling' || round === undefined) {
-            return;
-        }
+        if (phase !== 'settling' || prevPhase === 'settling') return;
 
         const { netDelta } = settleRound(round);
 
