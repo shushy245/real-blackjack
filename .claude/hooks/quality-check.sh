@@ -45,10 +45,51 @@ cd "$PROJECT_ROOT"
 
 ERRORS=""
 
-# Lint only the edited files (faster than project-wide lint)
-LINT_OUTPUT=$(echo "$EDITED_TS" | xargs ./node_modules/.bin/eslint --max-warnings 0 2>&1) || ERRORS="$ERRORS
+# Lint edited files, respecting worktrees: files under .claude/worktrees/<name>/ must be linted
+# from the worktree root (their absolute path starts with a dot-directory, which ESLint ignores
+# by default when invoked from the main repo root with an absolute path).
+lint_from_root() {
+    local lint_root="$1"; shift
+    local rel_files=()
+    for f in "$@"; do
+        rel_files+=("${f#"$lint_root/"}")
+    done
+    (cd "$lint_root" && ./node_modules/.bin/eslint --max-warnings 0 "${rel_files[@]}" 2>&1)
+}
+
+# Separate files by whether they live in a worktree or the main repo.
+WORKTREE_ROOT=""
+WORKTREE_FILES=""
+MAIN_FILES=""
+
+while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    if [[ "$f" == *"/.claude/worktrees/"* ]]; then
+        wt=$(echo "$f" | sed 's|\(.*/.claude/worktrees/[^/]*\)/.*|\1|')
+        WORKTREE_ROOT="$wt"
+        WORKTREE_FILES="$WORKTREE_FILES $f"
+    else
+        MAIN_FILES="$MAIN_FILES $f"
+    fi
+done <<< "$EDITED_TS"
+
+LINT_OUTPUT=""
+
+if [ -n "$MAIN_FILES" ]; then
+    # shellcheck disable=SC2086
+    out=$(lint_from_root "$PROJECT_ROOT" $MAIN_FILES 2>&1) || LINT_OUTPUT="$LINT_OUTPUT$out"$'\n'
+fi
+
+if [ -n "$WORKTREE_FILES" ] && [ -n "$WORKTREE_ROOT" ]; then
+    # shellcheck disable=SC2086
+    out=$(lint_from_root "$WORKTREE_ROOT" $WORKTREE_FILES 2>&1) || LINT_OUTPUT="$LINT_OUTPUT$out"$'\n'
+fi
+
+if [ -n "$LINT_OUTPUT" ]; then
+    ERRORS="$ERRORS
 ### Lint:
 $LINT_OUTPUT"
+fi
 
 # Detect monorepo: check whether any packages/*/package.json exists.
 HAS_PACKAGES=false
