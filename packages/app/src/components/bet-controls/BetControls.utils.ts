@@ -27,3 +27,26 @@ export const BetControlsTestIds = {
 export const clampBet = (current: number, added: number, balance: number): number => Math.min(current + added, balance);
 
 export const formatAmount = (amount: number): string => `$${amount}`;
+
+export const canDeal = ({ pendingBet, minBet }: { pendingBet: number; minBet: number }): boolean =>
+    pendingBet >= minBet;
+
+export const canRepeatBet = ({
+    lastBet,
+    minBet,
+    balance,
+}: {
+    lastBet: number;
+    minBet: number;
+    balance: number;
+}): boolean => lastBet >= minBet && lastBet <= balance;
+
+export const isChipDisabled = ({
+    denom,
+    pendingBet,
+    balance,
+}: {
+    denom: number;
+    pendingBet: number;
+    balance: number;
+}): boolean => pendingBet + denom > balance;

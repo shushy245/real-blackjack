@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import type { TextStyle } from 'react-native';
 import { StyleSheet, Text, View } from 'react-native';
-import type { Card, HandValue } from '@real-blackjack/common';
+import type { Card, Hand } from '@real-blackjack/common';
 
 import { CardView, DealingCard } from '~/components/card';
 
@@ -14,15 +14,15 @@ import {
     buildScoreLabel,
 } from './Hand.utils';
 
-type PlayerHandProps = { cards: readonly Card[]; hand: HandValue; isBlackjack: boolean };
+type PlayerHandProps = { hand: Hand };
 
-export const PlayerHand = ({ cards, hand, isBlackjack }: PlayerHandProps): JSX.Element => {
-    const variant = buildBadgeVariant(hand, isBlackjack);
-    const label = buildScoreLabel(hand, isBlackjack);
+export const PlayerHand = ({ hand }: PlayerHandProps): JSX.Element => {
+    const variant = buildBadgeVariant(hand);
+    const label = buildScoreLabel(hand);
 
     return (
         <View style={styles.container}>
-            <CardFan cards={cards} />
+            <CardFan cards={hand.cards} />
             <ScoreBadge label={label} variant={variant} />
         </View>
     );

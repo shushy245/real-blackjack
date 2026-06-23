@@ -73,7 +73,7 @@ describe('applyAction — player moves', () => {
         if (next.round === undefined) throw new Error('expected round after hit');
         const hand0 = next.round.playerHands[0];
         if (hand0 === undefined) throw new Error('expected hand at index 0');
-        expect(hand0.length).toBeGreaterThan(2);
+        expect(hand0.cards.length).toBeGreaterThan(2);
     });
 
     it('updates balance when round settles after player busts', () => {

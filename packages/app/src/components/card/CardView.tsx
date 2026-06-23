@@ -8,6 +8,7 @@ import {
     GOLD,
     NAVY,
     isFaceOrAce,
+    isWideRankLabel,
     pipPositionMap,
     rankLabelMap,
     suitColorMap,
@@ -107,29 +108,27 @@ const CardBackground = (): JSX.Element => (
 
 type CornerLabelProps = { rank: string; suit: string; color: string };
 
-const CornerLabel = ({ rank, suit, color }: CornerLabelProps): JSX.Element => (
-    <G>
-        <Text
-            x={7}
-            y={18}
-            fontSize={rank.length > 1 ? 11 : 13}
-            fontFamily="Georgia, 'Times New Roman', serif"
-            fontWeight="bold"
-            fill={color}
-        >
-            {rank}
-        </Text>
-        <Text
-            x={rank.length > 1 ? 8 : 7}
-            y={28}
-            fontSize={10}
-            fontFamily="Georgia, 'Times New Roman', serif"
-            fill={color}
-        >
-            {suit}
-        </Text>
-    </G>
-);
+const CornerLabel = ({ rank, suit, color }: CornerLabelProps): JSX.Element => {
+    const wide = isWideRankLabel(rank);
+
+    return (
+        <G>
+            <Text
+                x={7}
+                y={18}
+                fontSize={wide ? 11 : 13}
+                fontFamily="Georgia, 'Times New Roman', serif"
+                fontWeight="bold"
+                fill={color}
+            >
+                {rank}
+            </Text>
+            <Text x={wide ? 8 : 7} y={28} fontSize={10} fontFamily="Georgia, 'Times New Roman', serif" fill={color}>
+                {suit}
+            </Text>
+        </G>
+    );
+};
 
 type CenterContentProps = { rank: Rank; suit: string; color: string };
 

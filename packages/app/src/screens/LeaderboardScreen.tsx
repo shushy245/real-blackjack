@@ -6,6 +6,8 @@ import type { Session } from '~/store';
 import { FullColumn } from '~/components/ui';
 import { useLeaderboardStore } from '~/store';
 
+import { formatDate, rankLabel } from './LeaderboardScreen.utils';
+
 export const LeaderboardScreen = (): JSX.Element => {
     const sessions = useLeaderboardStore((state) => state.sessions);
     const insets = useSafeAreaInsets();
@@ -32,17 +34,6 @@ export const LeaderboardScreen = (): JSX.Element => {
         </FullColumn>
     );
 };
-
-const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-const formatDate = (iso: string): string => {
-    const d = new Date(iso);
-    const month = MONTH_LABELS[d.getMonth()] ?? '';
-
-    return `${month} ${d.getDate()}, ${d.getFullYear()}`;
-};
-
-const rankLabel = (rank: number): string => (rank <= 9 ? `0${rank}` : `${rank}`);
 
 type SessionRowProps = { session: Session; rank: number };
 

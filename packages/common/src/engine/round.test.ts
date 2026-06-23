@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { Hand } from './hand';
 import { createRng } from './rng';
 import { createShoe } from './shoe';
 import type { Card } from './types';
@@ -25,8 +26,10 @@ describe('createRound — deal phase', () => {
         const shoe = createShoe(createRng(42));
         const round = createRound(50, 500, shoe);
 
-        expect(round.playerHands[0]).toHaveLength(2);
-        expect(round.dealerCards).toHaveLength(2);
+        const hand0 = round.playerHands[0];
+        if (hand0 === undefined) throw new Error('expected hand at index 0');
+        expect(hand0.cards).toHaveLength(2);
+        expect(round.dealerHand.cards).toHaveLength(2);
     });
 
     it('shoe has 4 fewer cards after deal', () => {
@@ -129,7 +132,9 @@ describe('applyRoundAction — Hit', () => {
         const round = actionRound([aCard({ rank: Rank.Three }).build()]);
         const next = applyRoundAction(round, { type: Move.Hit });
 
-        expect(next.playerHands[0]).toHaveLength(3);
+        const hit0 = next.playerHands[0];
+        if (hit0 === undefined) throw new Error('expected hand at index 0');
+        expect(hit0.cards).toHaveLength(3);
     });
 
     it('busting the only hand moves to dealer-turn', () => {
@@ -167,11 +172,13 @@ describe('applyRoundAction — Stand', () => {
     it('advances activeHandIndex when more hands remain', () => {
         // two-hand split scenario: start with activeHandIndex 0, two hands present
         const base = actionRound([aCard({ rank: Rank.Three }).build()]);
+        const firstHand = base.playerHands[0];
+        if (firstHand === undefined) throw new Error('expected hand at index 0');
         const twoHand: typeof base = {
             ...base,
             playerHands: [
-                base.playerHands[0] ?? [],
-                [aCard({ rank: Rank.Nine }).build(), aCard({ rank: Rank.Three }).build()],
+                firstHand,
+                Hand.of([aCard({ rank: Rank.Nine }).build(), aCard({ rank: Rank.Three }).build()]),
             ],
             handBets: [50, 50],
             activeHandIndex: 0,
@@ -196,7 +203,9 @@ describe('applyRoundAction — Double', () => {
         const round = actionRound([aCard({ rank: Rank.Three }).build()]);
         const next = applyRoundAction(round, { type: Move.Double });
 
-        expect(next.playerHands[0]).toHaveLength(3);
+        const double0 = next.playerHands[0];
+        if (double0 === undefined) throw new Error('expected hand at index 0');
+        expect(double0.cards).toHaveLength(3);
         expect(next.phase).toBe('dealer-turn');
     });
 });
@@ -215,9 +224,12 @@ describe('applyRoundAction — Split', () => {
         const round = createRound(50, 500, shoe);
         const next = applyRoundAction(round, { type: Move.Split });
 
+        const split0 = next.playerHands[0];
+        const split1 = next.playerHands[1];
+        if (split0 === undefined || split1 === undefined) throw new Error('expected two hands after split');
         expect(next.playerHands).toHaveLength(2);
-        expect(next.playerHands[0]).toHaveLength(2);
-        expect(next.playerHands[1]).toHaveLength(2);
+        expect(split0.cards).toHaveLength(2);
+        expect(split1.cards).toHaveLength(2);
         expect(next.activeHandIndex).toBe(0);
     });
 
@@ -241,13 +253,13 @@ describe('applyRoundAction — Split', () => {
         const fourHands: typeof base = {
             ...base,
             playerHands: [
-                [
+                Hand.of([
                     aCard({ rank: Rank.Eight, suit: Suit.Hearts }).build(),
                     aCard({ rank: Rank.Eight, suit: Suit.Spades }).build(),
-                ],
-                [aCard({ rank: Rank.Eight, suit: Suit.Clubs }).build(), aCard({ rank: Rank.Three }).build()],
-                [aCard({ rank: Rank.Eight, suit: Suit.Diamonds }).build(), aCard({ rank: Rank.Five }).build()],
-                [aCard({ rank: Rank.Two }).build(), aCard({ rank: Rank.Four }).build()],
+                ]),
+                Hand.of([aCard({ rank: Rank.Eight, suit: Suit.Clubs }).build(), aCard({ rank: Rank.Three }).build()]),
+                Hand.of([aCard({ rank: Rank.Eight, suit: Suit.Diamonds }).build(), aCard({ rank: Rank.Five }).build()]),
+                Hand.of([aCard({ rank: Rank.Two }).build(), aCard({ rank: Rank.Four }).build()]),
             ],
             handBets: [50, 50, 50, 50],
         };

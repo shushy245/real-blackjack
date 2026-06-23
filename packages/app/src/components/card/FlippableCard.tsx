@@ -5,6 +5,7 @@ import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } f
 
 import { useSoundEffects } from '~/sounds';
 
+import { isFlipBackFace } from './FlippableCard.utils';
 import { FLIP_DURATION_MS } from '../../animations/constants';
 
 type FlippableCardProps = {
@@ -32,12 +33,12 @@ export const FlippableCard = ({ front, back, flipped }: FlippableCardProps): JSX
     }, [flipped, progress, sounds]);
 
     const backStyle = useAnimatedStyle(() => ({
-        opacity: progress.value < 0.5 ? 1 : 0,
+        opacity: isFlipBackFace(progress.value) ? 1 : 0,
         transform: [{ perspective: 1200 }, { rotateY: `${interpolate(progress.value, [0, 1], [0, Math.PI])}rad` }],
     }));
 
     const frontStyle = useAnimatedStyle(() => ({
-        opacity: progress.value >= 0.5 ? 1 : 0,
+        opacity: isFlipBackFace(progress.value) ? 0 : 1,
         transform: [{ perspective: 1200 }, { rotateY: `${interpolate(progress.value, [0, 1], [-Math.PI, 0])}rad` }],
     }));
 

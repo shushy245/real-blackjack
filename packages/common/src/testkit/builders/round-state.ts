@@ -1,17 +1,18 @@
+import { Hand } from '../../engine/hand';
 import { Rank, Suit } from '../../engine/types';
 import type { RoundState } from '../../engine/round';
 
 const defaultPlayerHands: RoundState['playerHands'] = [
-    [
+    Hand.of([
         { rank: Rank.Seven, suit: Suit.Spades },
         { rank: Rank.Nine, suit: Suit.Spades },
-    ],
+    ]),
 ];
 
-const defaultDealerCards: RoundState['dealerCards'] = [
+const defaultDealerHand: RoundState['dealerHand'] = Hand.of([
     { rank: Rank.Six, suit: Suit.Spades },
     { rank: Rank.King, suit: Suit.Spades },
-];
+]);
 
 class RoundStateBuilder {
     private state: RoundState;
@@ -21,7 +22,7 @@ class RoundStateBuilder {
             phase: overrides.phase ?? 'player-action',
             shoe: overrides.shoe ?? { cards: [], dealtCount: 0 },
             playerHands: overrides.playerHands ?? defaultPlayerHands,
-            dealerCards: overrides.dealerCards ?? defaultDealerCards,
+            dealerHand: overrides.dealerHand ?? defaultDealerHand,
             holeCardRevealed: overrides.holeCardRevealed ?? false,
             activeHandIndex: overrides.activeHandIndex ?? 0,
             originalBet: overrides.originalBet ?? 50,
@@ -46,8 +47,8 @@ class RoundStateBuilder {
         return this;
     }
 
-    withDealerCards(dealerCards: RoundState['dealerCards']): this {
-        this.state = { ...this.state, dealerCards };
+    withDealerHand(dealerHand: RoundState['dealerHand']): this {
+        this.state = { ...this.state, dealerHand };
 
         return this;
     }

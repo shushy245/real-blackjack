@@ -5,7 +5,17 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } 
 
 import { useSoundEffects } from '~/sounds';
 
-import { CHIP_DENOMINATIONS, type ChipDenomination, chipConfigMap, clampBet, formatAmount } from './BetControls.utils';
+import {
+    BetControlsTestIds,
+    CHIP_DENOMINATIONS,
+    type ChipDenomination,
+    canDeal,
+    canRepeatBet,
+    chipConfigMap,
+    clampBet,
+    formatAmount,
+    isChipDisabled,
+} from './BetControls.utils';
 
 type BetControlsProps = {
     balance: number;
@@ -24,21 +34,21 @@ export const BetControls = ({ balance, minBet, lastBet, onPlaceBet }: BetControl
     const handleRepeat = (): void => setPendingBet(Math.min(lastBet, balance));
 
     const handleDeal = (): void => {
-        if (pendingBet < minBet) return;
+        if (!canDeal({ pendingBet, minBet })) return;
         onPlaceBet(pendingBet);
         setPendingBet(0);
     };
 
-    const canDeal = pendingBet >= minBet;
-    const canRepeat = lastBet >= minBet && lastBet <= balance;
+    const isDealEnabled = canDeal({ pendingBet, minBet });
+    const isRepeatEnabled = canRepeatBet({ lastBet, minBet, balance });
 
     return (
         <View style={styles.container}>
             <BetCounter amount={pendingBet} />
             <ChipTray balance={balance} pendingBet={pendingBet} onChip={handleChip} />
             <ActionRow
-                canDeal={canDeal}
-                canRepeat={canRepeat}
+                canDeal={isDealEnabled}
+                canRepeat={isRepeatEnabled}
                 onClear={handleClear}
                 onRepeat={handleRepeat}
                 onDeal={handleDeal}
@@ -52,7 +62,9 @@ type BetCounterProps = { amount: number };
 const BetCounter = ({ amount }: BetCounterProps): JSX.Element => (
     <View style={styles.counter}>
         <Text style={styles.counterLabel}>{`BET`}</Text>
-        <Text style={styles.counterAmount}>{formatAmount(amount)}</Text>
+        <Text testID={BetControlsTestIds.BetCounter} style={styles.counterAmount}>
+            {formatAmount(amount)}
+        </Text>
     </View>
 );
 
@@ -65,7 +77,12 @@ type ChipTrayProps = {
 const ChipTray = ({ balance, pendingBet, onChip }: ChipTrayProps): JSX.Element => (
     <View style={styles.tray}>
         {CHIP_DENOMINATIONS.map((denom) => (
-            <AnimatedChip key={denom} denom={denom} disabled={pendingBet + denom > balance} onChip={onChip} />
+            <AnimatedChip
+                key={denom}
+                denom={denom}
+                disabled={isChipDisabled({ denom, pendingBet, balance })}
+                onChip={onChip}
+            />
         ))}
     </View>
 );
@@ -80,10 +97,16 @@ type ActionRowProps = {
 
 const ActionRow = ({ canDeal, canRepeat, onClear, onRepeat, onDeal }: ActionRowProps): JSX.Element => (
     <View style={styles.actionRow}>
-        <TouchableOpacity onPress={onClear} style={styles.secondaryBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+            testID={BetControlsTestIds.ClearButton}
+            onPress={onClear}
+            style={styles.secondaryBtn}
+            activeOpacity={0.7}
+        >
             <Text style={styles.secondaryBtnText}>{`CLEAR`}</Text>
         </TouchableOpacity>
         <TouchableOpacity
+            testID={BetControlsTestIds.RepeatButton}
             onPress={onRepeat}
             disabled={!canRepeat}
             style={[styles.secondaryBtn, !canRepeat ? styles.btnDisabled : undefined]}
@@ -92,6 +115,7 @@ const ActionRow = ({ canDeal, canRepeat, onClear, onRepeat, onDeal }: ActionRowP
             <Text style={[styles.secondaryBtnText, !canRepeat ? styles.textDisabled : undefined]}>{`REPEAT`}</Text>
         </TouchableOpacity>
         <TouchableOpacity
+            testID={BetControlsTestIds.DealButton}
             onPress={onDeal}
             disabled={!canDeal}
             style={[styles.dealBtn, !canDeal ? styles.btnDisabled : undefined]}
@@ -135,6 +159,7 @@ const AnimatedChip = ({ denom, disabled, onChip }: AnimatedChipProps): JSX.Eleme
     return (
         <Animated.View style={animatedStyle}>
             <TouchableOpacity
+                testID={BetControlsTestIds.ChipButton(denom)}
                 onPress={handlePress}
                 disabled={disabled}
                 style={[

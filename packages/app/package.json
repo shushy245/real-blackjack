@@ -47,7 +47,9 @@
             "<rootDir>/src/testkit/setup.ts"
         ],
         "moduleNameMapper": {
-            "^@real-blackjack/common$": "<rootDir>/../common/src/engine/index.ts"
+            "^@real-blackjack/common$": "<rootDir>/../common/src/engine/index.ts",
+            "^react-native-reanimated$": "<rootDir>/node_modules/react-native-reanimated/mock.js",
+            "^~(.*)$": "<rootDir>/src$1"
         }
     }
 }

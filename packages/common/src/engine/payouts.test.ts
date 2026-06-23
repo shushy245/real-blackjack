@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { Hand } from './hand';
 import type { Card } from './types';
 import { settleRound } from './payouts';
 import { Move, Rank, Suit } from './types';
@@ -39,7 +40,7 @@ describe('runDealerTurn', () => {
         const stood = applyRoundAction(round, { type: Move.Stand });
         const dealerRound = runDealerTurn(stood);
 
-        expect(dealerRound.dealerCards).toHaveLength(3);
+        expect(dealerRound.dealerHand.cards).toHaveLength(3);
         expect(dealerRound.phase).toBe('settling');
     });
 
@@ -54,7 +55,7 @@ describe('runDealerTurn', () => {
         const stood = applyRoundAction(round, { type: Move.Stand });
         const dealerRound = runDealerTurn(stood);
 
-        expect(dealerRound.dealerCards).toHaveLength(2);
+        expect(dealerRound.dealerHand.cards).toHaveLength(2);
     });
 
     it('dealer stops on soft 18+', () => {
@@ -70,7 +71,7 @@ describe('runDealerTurn', () => {
         const stood = applyRoundAction(declined, { type: Move.Stand });
         const dealerRound = runDealerTurn(stood);
 
-        expect(dealerRound.dealerCards).toHaveLength(2);
+        expect(dealerRound.dealerHand.cards).toHaveLength(2);
     });
 
     it('dealer does not draw additional cards after busting', () => {
@@ -84,7 +85,7 @@ describe('runDealerTurn', () => {
         const stood = applyRoundAction(round, { type: Move.Stand });
         const dealerRound = runDealerTurn(stood);
 
-        expect(dealerRound.dealerCards).toHaveLength(3);
+        expect(dealerRound.dealerHand.cards).toHaveLength(3);
         expect(dealerRound.phase).toBe('settling');
     });
 });
@@ -236,10 +237,10 @@ describe('settleRound', () => {
         const splitRound = aRoundState({
             phase: 'settling',
             playerHands: [
-                [aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()],
-                [aCard({ rank: Rank.Eight }).build(), aCard({ rank: Rank.Nine }).build()],
+                Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()]),
+                Hand.of([aCard({ rank: Rank.Eight }).build(), aCard({ rank: Rank.Nine }).build()]),
             ],
-            dealerCards: [aCard({ rank: Rank.Six }).build(), aCard({ rank: Rank.Ten }).build()],
+            dealerHand: Hand.of([aCard({ rank: Rank.Six }).build(), aCard({ rank: Rank.Ten }).build()]),
             holeCardRevealed: true,
             activeHandIndex: 1,
             handBets: [50, 50],

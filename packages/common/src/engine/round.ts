@@ -1,16 +1,16 @@
+import { Hand } from './hand';
 import { shouldDealerHit } from './dealer';
 import { type Shoe, dealCard } from './shoe';
 import { getLegalMoves } from './legal-moves';
 import { Move, Rank, type Card } from './types';
-import { calculateHand, isBlackjack, isBust } from './hand';
 
 export type RoundPhase = 'player-action' | 'insurance-pending' | 'dealer-turn' | 'settling';
 
 export type RoundState = {
     readonly phase: RoundPhase;
     readonly shoe: Shoe;
-    readonly playerHands: readonly (readonly Card[])[];
-    readonly dealerCards: readonly [Card, ...Card[]];
+    readonly playerHands: readonly Hand[];
+    readonly dealerHand: Hand;
     readonly holeCardRevealed: boolean;
     readonly activeHandIndex: number;
     readonly originalBet: number;
@@ -27,11 +27,11 @@ export type PlayerAction = { type: Move };
 const TEN_VALUE_RANKS = new Set<Rank>([Rank.Ten, Rank.Jack, Rank.Queen, Rank.King]);
 
 const resolveInitialPhase = (
-    playerHand: readonly Card[],
+    playerHand: Hand,
     dealerUpCard: Card,
     dealerHoleCard: Card,
 ): { phase: RoundPhase; holeCardRevealed: boolean } => {
-    const playerBJ = isBlackjack(playerHand);
+    const playerBJ = playerHand.isBlackjack();
     const dealerUpIsAce = dealerUpCard.rank === Rank.Ace;
     const dealerUpIsTenValue = TEN_VALUE_RANKS.has(dealerUpCard.rank);
 
@@ -54,8 +54,8 @@ export const createRound = (bet: number, balance: number, shoe: Shoe): RoundStat
     const [p2, shoe3] = dealCard(shoe2);
     const [d2, shoe4] = dealCard(shoe3);
 
-    const playerHand: readonly Card[] = [p1, p2];
-    const dealerCards: readonly [Card, Card] = [d1, d2];
+    const playerHand = Hand.of([p1, p2]);
+    const dealerHand = Hand.of([d1, d2]);
 
     const { phase, holeCardRevealed } = resolveInitialPhase(playerHand, d1, d2);
 
@@ -63,7 +63,7 @@ export const createRound = (bet: number, balance: number, shoe: Shoe): RoundStat
         phase,
         shoe: shoe4,
         playerHands: [playerHand],
-        dealerCards,
+        dealerHand,
         holeCardRevealed,
         activeHandIndex: 0,
         originalBet: bet,
@@ -89,12 +89,11 @@ const applyHit = (state: RoundState): RoundState => {
     if (activeHand === undefined) throw new Error(`applyRoundAction: no active hand at index ${state.activeHandIndex}`);
 
     const [newCard, newShoe] = dealCard(state.shoe);
-    const newHand: readonly Card[] = [...activeHand, newCard];
-    const handValue = calculateHand(newHand);
+    const newHand = activeHand.add(newCard);
     const newHands = state.playerHands.map((h, i) => (i === state.activeHandIndex ? newHand : h));
     const updated: RoundState = { ...state, shoe: newShoe, playerHands: newHands };
 
-    if (isBust(handValue) || handValue.value === 21) return advanceActiveHand(updated);
+    if (newHand.isBust() || newHand.value().value === 21) return advanceActiveHand(updated);
 
     return updated;
 };
@@ -106,7 +105,7 @@ const applyDouble = (state: RoundState): RoundState => {
     if (activeHand === undefined) throw new Error(`applyRoundAction: no active hand at index ${state.activeHandIndex}`);
 
     const [newCard, newShoe] = dealCard(state.shoe);
-    const newHand: readonly Card[] = [...activeHand, newCard];
+    const newHand = activeHand.add(newCard);
     const newHands = state.playerHands.map((h, i) => (i === state.activeHandIndex ? newHand : h));
     const doubledBet = state.activeBet * 2;
     const newHandBets = state.handBets.map((b, i) => (i === state.activeHandIndex ? doubledBet : b));
@@ -126,15 +125,15 @@ const applySplit = (state: RoundState): RoundState => {
     const activeHand = state.playerHands[state.activeHandIndex];
     if (activeHand === undefined) throw new Error(`applyRoundAction: no active hand at index ${state.activeHandIndex}`);
 
-    const c1 = activeHand[0];
-    const c2 = activeHand[1];
+    const c1 = activeHand.cards[0];
+    const c2 = activeHand.cards[1];
     if (c1 === undefined || c2 === undefined) throw new Error('applyRoundAction: split requires exactly 2 cards');
 
     const [card1, shoe1] = dealCard(state.shoe);
     const [card2, shoe2] = dealCard(shoe1);
 
-    const hand1: readonly Card[] = [c1, card1];
-    const hand2: readonly Card[] = [c2, card2];
+    const hand1 = Hand.of([c1, card1]);
+    const hand2 = Hand.of([c2, card2]);
 
     const newHands = [
         ...state.playerHands.slice(0, state.activeHandIndex),
@@ -161,7 +160,7 @@ const applySplit = (state: RoundState): RoundState => {
 };
 
 const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundState => {
-    const dealerHasBJ = isBlackjack(state.dealerCards);
+    const dealerHasBJ = state.dealerHand.isBlackjack();
 
     if (action.type === Move.Insurance) {
         const insuranceBet = Math.floor(state.originalBet / 2);
@@ -206,20 +205,17 @@ export const applyRoundAction = (state: RoundState, action: PlayerAction): Round
     return handler(state);
 };
 
-const dealUntilStand = (
-    cards: readonly [Card, ...Card[]],
-    shoe: Shoe,
-): { cards: readonly [Card, ...Card[]]; shoe: Shoe } => {
-    if (!shouldDealerHit(calculateHand(cards))) return { cards, shoe };
+const dealUntilStand = (hand: Hand, shoe: Shoe): { hand: Hand; shoe: Shoe } => {
+    if (!shouldDealerHit(hand.value())) return { hand, shoe };
     const [newCard, newShoe] = dealCard(shoe);
 
-    return dealUntilStand([...cards, newCard], newShoe);
+    return dealUntilStand(hand.add(newCard), newShoe);
 };
 
 export const runDealerTurn = (state: RoundState): RoundState => {
     if (state.phase !== 'dealer-turn') throw new Error(`runDealerTurn: expected dealer-turn phase, got ${state.phase}`);
 
-    const { cards: dealerCards, shoe } = dealUntilStand(state.dealerCards, state.shoe);
+    const { hand: dealerHand, shoe } = dealUntilStand(state.dealerHand, state.shoe);
 
-    return { ...state, dealerCards, shoe, holeCardRevealed: true, phase: 'settling' };
+    return { ...state, dealerHand, shoe, holeCardRevealed: true, phase: 'settling' };
 };

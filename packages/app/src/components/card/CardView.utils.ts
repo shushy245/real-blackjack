@@ -119,3 +119,5 @@ export const pipPositionMap: Record<Rank, readonly PipPosition[]> = {
 
 export const isFaceOrAce = (rank: Rank): boolean =>
     rank === Rank.Jack || rank === Rank.Queen || rank === Rank.King || rank === Rank.Ace;
+
+export const isWideRankLabel = (rankLabel: string): boolean => rankLabel.length > 1;

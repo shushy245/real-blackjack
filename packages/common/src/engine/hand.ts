@@ -21,7 +21,7 @@ const rankValueMap: Record<Rank, number> = {
     [Rank.Ace]: 11,
 };
 
-export const calculateHand = (cards: readonly Card[]): HandValue => {
+const calculateHand = (cards: readonly Card[]): HandValue => {
     const { rawValue, aceCount } = cards.reduce(
         (acc, c) => ({
             rawValue: acc.rawValue + rankValueMap[c.rank],
@@ -34,11 +34,53 @@ export const calculateHand = (cards: readonly Card[]): HandValue => {
     return { value: rawValue - softReductions * 10, isSoft: aceCount - softReductions > 0 };
 };
 
-export const isBust = (hand: HandValue): boolean => hand.value > 21;
+export class Hand {
+    readonly cards: readonly Card[];
 
-export const isBlackjack = (cards: readonly Card[]): boolean => {
-    if (cards.length !== 2) return false;
-    const hand = calculateHand(cards);
+    private constructor(cards: readonly Card[]) {
+        this.cards = cards;
+    }
 
-    return hand.value === 21 && hand.isSoft;
-};
+    static of(cards: readonly Card[]): Hand {
+        if (cards.length === 0) throw new Error('Hand.of: cannot create an empty hand');
+
+        return new Hand(cards);
+    }
+
+    add(card: Card): Hand {
+        return new Hand([...this.cards, card]);
+    }
+
+    upCard(): Card {
+        const card = this.cards[0];
+        if (card === undefined) throw new Error('Hand.upCard: empty hand');
+
+        return card;
+    }
+
+    value(): HandValue {
+        return calculateHand(this.cards);
+    }
+
+    isBust(): boolean {
+        return this.value().value > 21;
+    }
+
+    isBlackjack(): boolean {
+        if (this.cards.length !== 2) return false;
+        const { value, isSoft } = this.value();
+
+        return value === 21 && isSoft;
+    }
+
+    isFirstAction(): boolean {
+        return this.cards.length === 2;
+    }
+
+    isPair(): boolean {
+        if (this.cards.length !== 2) return false;
+        const [first, second] = this.cards;
+
+        return first !== undefined && second !== undefined && first.rank === second.rank;
+    }
+}

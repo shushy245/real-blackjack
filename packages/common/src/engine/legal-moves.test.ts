@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { Hand } from './hand';
 import { Move, Rank, Suit } from './types';
 import { getLegalMoves } from './legal-moves';
 import { aCard, aRoundState } from '../testkit/builders';
@@ -21,11 +22,11 @@ describe('getLegalMoves', () => {
     it('excludes Double Down on 3+ card hand', () => {
         const state = aRoundState({
             playerHands: [
-                [
+                Hand.of([
                     aCard({ rank: Rank.Three }).build(),
                     aCard({ rank: Rank.Four }).build(),
                     aCard({ rank: Rank.Seven }).build(),
-                ],
+                ]),
             ],
         }).build();
         const moves = getLegalMoves(state);
@@ -43,10 +44,10 @@ describe('getLegalMoves', () => {
     it('includes Split on 2-card hand with matching ranks and fewer than 4 hands', () => {
         const state = aRoundState({
             playerHands: [
-                [
+                Hand.of([
                     aCard({ rank: Rank.Eight, suit: Suit.Hearts }).build(),
                     aCard({ rank: Rank.Eight, suit: Suit.Spades }).build(),
-                ],
+                ]),
             ],
         }).build();
         const moves = getLegalMoves(state);
@@ -63,10 +64,10 @@ describe('getLegalMoves', () => {
     it('excludes Split when balance < originalBet', () => {
         const state = aRoundState({
             playerHands: [
-                [
+                Hand.of([
                     aCard({ rank: Rank.Eight, suit: Suit.Hearts }).build(),
                     aCard({ rank: Rank.Eight, suit: Suit.Spades }).build(),
-                ],
+                ]),
             ],
             balance: 40,
         }).build();
@@ -78,13 +79,13 @@ describe('getLegalMoves', () => {
     it('excludes Split when already at 4 hands', () => {
         const state = aRoundState({
             playerHands: [
-                [
+                Hand.of([
                     aCard({ rank: Rank.Eight, suit: Suit.Hearts }).build(),
                     aCard({ rank: Rank.Eight, suit: Suit.Spades }).build(),
-                ],
-                [aCard({ rank: Rank.Eight, suit: Suit.Clubs }).build(), aCard({ rank: Rank.Three }).build()],
-                [aCard({ rank: Rank.Eight, suit: Suit.Diamonds }).build(), aCard({ rank: Rank.Five }).build()],
-                [aCard({ rank: Rank.Two }).build(), aCard({ rank: Rank.Four }).build()],
+                ]),
+                Hand.of([aCard({ rank: Rank.Eight, suit: Suit.Clubs }).build(), aCard({ rank: Rank.Three }).build()]),
+                Hand.of([aCard({ rank: Rank.Eight, suit: Suit.Diamonds }).build(), aCard({ rank: Rank.Five }).build()]),
+                Hand.of([aCard({ rank: Rank.Two }).build(), aCard({ rank: Rank.Four }).build()]),
             ],
         }).build();
         const moves = getLegalMoves(state);
@@ -94,7 +95,7 @@ describe('getLegalMoves', () => {
 
     it('includes Insurance when dealer shows Ace, first action, not yet taken', () => {
         const state = aRoundState({
-            dealerCards: [aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.Six }).build()],
+            dealerHand: Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.Six }).build()]),
         }).build();
         const moves = getLegalMoves(state);
 
@@ -109,13 +110,13 @@ describe('getLegalMoves', () => {
 
     it('excludes Insurance when not first action (3+ cards on active hand)', () => {
         const state = aRoundState({
-            dealerCards: [aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.Six }).build()],
+            dealerHand: Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.Six }).build()]),
             playerHands: [
-                [
+                Hand.of([
                     aCard({ rank: Rank.Three }).build(),
                     aCard({ rank: Rank.Four }).build(),
                     aCard({ rank: Rank.Seven }).build(),
-                ],
+                ]),
             ],
         }).build();
         const moves = getLegalMoves(state);
@@ -125,7 +126,7 @@ describe('getLegalMoves', () => {
 
     it('excludes Insurance when already taken this round', () => {
         const state = aRoundState({
-            dealerCards: [aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.Six }).build()],
+            dealerHand: Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.Six }).build()]),
             insuranceTaken: true,
         }).build();
         const moves = getLegalMoves(state);
@@ -147,10 +148,10 @@ describe('getLegalMoves', () => {
 
     it('does not allow additional moves when user has blackjack and dealer has a non-ace', () => {
         const state1 = aRoundState({
-            playerHands: [[aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()]],
+            playerHands: [Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()])],
         }).build();
         const state2 = aRoundState({
-            playerHands: [[aCard({ rank: Rank.King }).build(), aCard({ rank: Rank.Ace }).build()]],
+            playerHands: [Hand.of([aCard({ rank: Rank.King }).build(), aCard({ rank: Rank.Ace }).build()])],
         }).build();
 
         expect(getLegalMoves(state1)).toEqual([]);
@@ -159,8 +160,8 @@ describe('getLegalMoves', () => {
 
     it('does not allow additional moves when user has blackjack and dealer has an ace', () => {
         const state = aRoundState({
-            playerHands: [[aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()]],
-            dealerCards: [aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()],
+            playerHands: [Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()])],
+            dealerHand: Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.King }).build()]),
         }).build();
 
         expect(getLegalMoves(state)).toEqual([]);

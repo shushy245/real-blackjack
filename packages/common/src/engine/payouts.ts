@@ -1,5 +1,5 @@
 import { type RoundState } from './round';
-import { calculateHand, isBlackjack, isBust } from './hand';
+import type { Hand, HandValue } from './hand';
 
 export type HandOutcome = 'win' | 'lose' | 'push' | 'blackjack';
 
@@ -10,21 +10,20 @@ export type HandResult = {
 };
 
 const settleHand = (
-    hand: readonly import('./types').Card[],
+    hand: Hand,
     handIndex: number,
     bet: number,
     dealerBJ: boolean,
-    dealerHandValue: ReturnType<typeof calculateHand>,
+    dealerHandValue: HandValue,
     insuranceBet: number | undefined,
     splitOccurred: boolean,
 ): HandResult => {
-    const playerHand = calculateHand(hand);
-    const playerBJ = isBlackjack(hand);
+    const playerBJ = hand.isBlackjack();
 
     // Insurance taken + dealer BJ: main bet loses; insurance payout (insuranceDelta) covers the loss
     if (dealerBJ && insuranceBet !== undefined && !playerBJ) return { handIndex, outcome: 'lose', payout: -bet };
 
-    if (isBust(playerHand)) return { handIndex, outcome: 'lose', payout: -bet };
+    if (hand.isBust()) return { handIndex, outcome: 'lose', payout: -bet };
 
     if (playerBJ) {
         if (dealerBJ) return { handIndex, outcome: 'push', payout: 0 };
@@ -36,17 +35,17 @@ const settleHand = (
 
     if (dealerBJ) return { handIndex, outcome: 'lose', payout: -bet };
 
-    if (isBust(dealerHandValue)) return { handIndex, outcome: 'win', payout: bet };
+    if (dealerHandValue.value > 21) return { handIndex, outcome: 'win', payout: bet };
 
-    if (playerHand.value > dealerHandValue.value) return { handIndex, outcome: 'win', payout: bet };
-    if (playerHand.value < dealerHandValue.value) return { handIndex, outcome: 'lose', payout: -bet };
+    if (hand.value().value > dealerHandValue.value) return { handIndex, outcome: 'win', payout: bet };
+    if (hand.value().value < dealerHandValue.value) return { handIndex, outcome: 'lose', payout: -bet };
 
     return { handIndex, outcome: 'push', payout: 0 };
 };
 
 export const settleRound = (state: RoundState): { netDelta: number; handResults: HandResult[] } => {
-    const dealerHandValue = calculateHand(state.dealerCards);
-    const dealerBJ = isBlackjack(state.dealerCards);
+    const dealerBJ = state.dealerHand.isBlackjack();
+    const dealerHandValue = state.dealerHand.value();
 
     const handResults: HandResult[] = state.playerHands.map((hand, i) => {
         const bet = state.handBets[i] ?? state.originalBet;

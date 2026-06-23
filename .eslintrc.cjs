@@ -206,6 +206,44 @@ module.exports = {
                 'no-restricted-syntax': 'off',
             },
         },
+        // ── Component files: no relational operators (domain logic belongs in model/selectors/utils) ──
+        {
+            files: ['**/*.tsx'],
+            excludedFiles: ['**/*.test.tsx', '**/*.driver.tsx'],
+            rules: {
+                // Override replaces the global rule — repeat all global selectors here
+                'no-restricted-syntax': [
+                    'error',
+                    {
+                        selector: 'ChainExpression',
+                        message:
+                            'Avoid optional chaining (?.). Either narrow the type so undefined is ruled out, or write an explicit guard clause (if (x === undefined) return ...).',
+                    },
+                    {
+                        selector: 'Literal[value=null]',
+                        message:
+                            'Use undefined instead of null. Normalise null at the boundary (row-mappers.utils.ts, http-client.ts).',
+                    },
+                    {
+                        selector: "JSXAttribute[name.name='data-testid'] > Literal",
+                        message: 'Use the component *TestIds object — never raw strings in data-testid.',
+                    },
+                    {
+                        selector: ':matches(JSXElement, JSXFragment) > JSXText[value=/\\S/]',
+                        message: 'Wrap JSX text nodes in {`backticks`} — even static ones.',
+                    },
+                    {
+                        selector: 'JSXExpressionContainer > Literal[value=type(string)]',
+                        message: 'Use {`backticks`} for JSX text expressions, not quoted strings.',
+                    },
+                    {
+                        selector: 'BinaryExpression[operator=/^(>=|<=|>|<)$/]',
+                        message:
+                            'Relational comparisons belong in model classes, selectors.ts, or *.utils.ts — not in component files.',
+                    },
+                ],
+            },
+        },
         // ── Test files: relax some rules + enforce builder pattern ───────────────
         {
             files: ['**/*.test.ts', '**/*.test.tsx', '**/cypress/**/*.ts', '**/cypress/**/*.tsx'],
