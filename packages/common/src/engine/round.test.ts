@@ -335,6 +335,43 @@ describe('applyRoundAction — Insurance', () => {
         expect(next.insuranceTaken).toBe(true);
         expect(next.insuranceBet).toBeUndefined();
     });
+
+    it('declining insurance when player has blackjack and dealer shows Ace but has no BJ: phase → settling immediately', () => {
+        // p1=A♠  d1=A♥  p2=K♠  d2=3♠ → player: A+K=BJ | dealer: A(up)+3(hole)=no BJ
+        const shoe = aShoe([
+            aCard({ rank: Rank.Ace, suit: Suit.Spades }).build(),
+            aCard({ rank: Rank.Ace, suit: Suit.Hearts }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Three }).build(),
+        ]).build();
+        const round = createRound(50, 500, shoe);
+        expect(round.phase).toBe('insurance-pending');
+
+        const next = applyRoundAction(round, { type: Move.Stand });
+
+        expect(next.phase).toBe('settling');
+        expect(next.holeCardRevealed).toBe(true);
+        expect(next.insuranceTaken).toBe(true);
+    });
+
+    it('accepting insurance when player has blackjack and dealer shows Ace but has no BJ: phase → settling immediately', () => {
+        // p1=A♠  d1=A♥  p2=K♠  d2=3♠ → player: A+K=BJ | dealer: A(up)+3(hole)=no BJ
+        const shoe = aShoe([
+            aCard({ rank: Rank.Ace, suit: Suit.Spades }).build(),
+            aCard({ rank: Rank.Ace, suit: Suit.Hearts }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Three }).build(),
+        ]).build();
+        const round = createRound(50, 500, shoe);
+        expect(round.phase).toBe('insurance-pending');
+
+        const next = applyRoundAction(round, { type: Move.Insurance });
+
+        expect(next.phase).toBe('settling');
+        expect(next.holeCardRevealed).toBe(true);
+        expect(next.insuranceTaken).toBe(true);
+        expect(next.insuranceBet).toBe(25);
+    });
 });
 
 describe('applyRoundAction — illegal moves', () => {

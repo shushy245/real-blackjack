@@ -161,6 +161,10 @@ const applySplit = (state: RoundState): RoundState => {
 
 const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundState => {
     const dealerHasBJ = state.dealerHand.isBlackjack();
+    const activeHand = state.playerHands[state.activeHandIndex];
+    if (activeHand === undefined)
+        throw new Error(`applyInsurancePending: no active hand at index ${state.activeHandIndex}`);
+    const playerHasBJ = activeHand.isBlackjack();
 
     if (action.type === Move.Insurance) {
         const insuranceBet = Math.floor(state.originalBet / 2);
@@ -171,13 +175,14 @@ const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundSt
             insuranceTaken: true,
         };
 
-        if (dealerHasBJ) return { ...base, phase: 'settling', holeCardRevealed: true };
+        if (dealerHasBJ || playerHasBJ) return { ...base, phase: 'settling', holeCardRevealed: true };
 
         return { ...base, phase: 'player-action' };
     }
 
     if (action.type === Move.Stand) {
-        if (dealerHasBJ) return { ...state, phase: 'settling', holeCardRevealed: true, insuranceTaken: true };
+        if (dealerHasBJ || playerHasBJ)
+            return { ...state, phase: 'settling', holeCardRevealed: true, insuranceTaken: true };
 
         return { ...state, phase: 'player-action', insuranceTaken: true };
     }
