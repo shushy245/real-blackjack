@@ -84,6 +84,14 @@ const advanceActiveHand = (state: RoundState): RoundState => {
     return { ...state, phase: 'dealer-turn' };
 };
 
+const advanceCompletedHands = (state: RoundState): RoundState => {
+    if (state.phase !== 'player-action') return state;
+    const activeHand = state.playerHands[state.activeHandIndex];
+    if (activeHand === undefined || activeHand.value().value < 21) return state;
+
+    return advanceCompletedHands(advanceActiveHand(state));
+};
+
 const applyHit = (state: RoundState): RoundState => {
     const activeHand = state.playerHands[state.activeHandIndex];
     if (activeHand === undefined) throw new Error(`applyRoundAction: no active hand at index ${state.activeHandIndex}`);
@@ -149,14 +157,14 @@ const applySplit = (state: RoundState): RoundState => {
         ...state.handBets.slice(state.activeHandIndex + 1),
     ];
 
-    return {
+    return advanceCompletedHands({
         ...state,
         shoe: shoe2,
         playerHands: newHands,
         handBets: newHandBets,
         balance: state.balance - state.originalBet,
         splitOccurred: true,
-    };
+    });
 };
 
 const applyInsurancePending = (state: RoundState, action: PlayerAction): RoundState => {

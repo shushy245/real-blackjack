@@ -248,6 +248,49 @@ describe('applyRoundAction — Split', () => {
         expect(next.balance).toBe(450); // 500 - 50 (originalBet for second hand)
     });
 
+    it('auto-advances past the new active hand when it immediately reaches 21 (e.g. A + King after splitting aces)', () => {
+        // Shoe: A♠ 6 A♥ 3 | A♣ 5 | K 7
+        // Deal: player=[A♠,A♥] dealer=[6,3] → player-action (no BJ, no Ace up)
+        // Split1 (AA): hand0=[A♠,A♣] (pair again), hand1=[A♥,5]
+        // Split2 (AA): hand0=[A♠,K]=21 → auto-advance!, hand1=[A♣,7]=18, hand2=[A♥,5]
+        const shoe = aShoe([
+            aCard({ rank: Rank.Ace, suit: Suit.Spades }).build(),
+            aCard({ rank: Rank.Six }).build(),
+            aCard({ rank: Rank.Ace, suit: Suit.Hearts }).build(),
+            aCard({ rank: Rank.Three }).build(),
+            aCard({ rank: Rank.Ace, suit: Suit.Clubs }).build(),
+            aCard({ rank: Rank.Five }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Seven }).build(),
+        ]).build();
+        const round = createRound(50, 500, shoe);
+        const afterSplit1 = applyRoundAction(round, { type: Move.Split });
+        const afterSplit2 = applyRoundAction(afterSplit1, { type: Move.Split });
+
+        expect(afterSplit2.playerHands).toHaveLength(3);
+        expect(afterSplit2.phase).toBe('player-action');
+        expect(afterSplit2.activeHandIndex).toBe(1);
+    });
+
+    it('advances to dealer-turn when every split hand immediately reaches 21', () => {
+        // Shoe: A♠ 6 A♥ 3 | K Q
+        // Deal: player=[A♠,A♥] dealer=[6,3] → player-action
+        // Split1 (AA): hand0=[A♠,K]=21 → auto-advance, hand1=[A♥,Q]=21 → auto-advance → dealer-turn
+        const shoe = aShoe([
+            aCard({ rank: Rank.Ace, suit: Suit.Spades }).build(),
+            aCard({ rank: Rank.Six }).build(),
+            aCard({ rank: Rank.Ace, suit: Suit.Hearts }).build(),
+            aCard({ rank: Rank.Three }).build(),
+            aCard({ rank: Rank.King }).build(),
+            aCard({ rank: Rank.Queen }).build(),
+        ]).build();
+        const round = createRound(50, 500, shoe);
+        const afterSplit = applyRoundAction(round, { type: Move.Split });
+
+        expect(afterSplit.playerHands).toHaveLength(2);
+        expect(afterSplit.phase).toBe('dealer-turn');
+    });
+
     it('throws when attempting a 5th split', () => {
         const base = actionRound([]);
         const fourHands: typeof base = {
