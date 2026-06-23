@@ -138,6 +138,42 @@ describe('Hand.add', () => {
     });
 });
 
+describe('Hand.isFirstAction', () => {
+    it('returns true for a 2-card hand', () => {
+        expect(Hand.of([aCard({ rank: Rank.Seven }).build(), aCard({ rank: Rank.Nine }).build()]).isFirstAction()).toBe(
+            true,
+        );
+    });
+
+    it('returns false for a 1-card hand', () => {
+        expect(Hand.of([aCard({ rank: Rank.Seven }).build()]).isFirstAction()).toBe(false);
+    });
+
+    it('returns false for a 3-card hand', () => {
+        expect(
+            Hand.of([
+                aCard({ rank: Rank.Seven }).build(),
+                aCard({ rank: Rank.Three }).build(),
+                aCard({ rank: Rank.Two }).build(),
+            ]).isFirstAction(),
+        ).toBe(false);
+    });
+});
+
+describe('Hand.isUpCardAce', () => {
+    it('returns true when first card is an Ace', () => {
+        expect(Hand.of([aCard({ rank: Rank.Ace }).build(), aCard({ rank: Rank.Seven }).build()]).isUpCardAce()).toBe(
+            true,
+        );
+    });
+
+    it('returns false when first card is not an Ace', () => {
+        expect(Hand.of([aCard({ rank: Rank.King }).build(), aCard({ rank: Rank.Ace }).build()]).isUpCardAce()).toBe(
+            false,
+        );
+    });
+});
+
 describe('Hand.of', () => {
     it('throws when given an empty array', () => {
         expect(() => Hand.of([])).toThrow('Hand.of: cannot create an empty hand');

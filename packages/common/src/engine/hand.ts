@@ -77,6 +77,10 @@ export class Hand {
         return this.cards.length === 2;
     }
 
+    isUpCardAce(): boolean {
+        return this.upCard().rank === Rank.Ace;
+    }
+
     isPair(): boolean {
         if (this.cards.length !== 2) return false;
         const [first, second] = this.cards;

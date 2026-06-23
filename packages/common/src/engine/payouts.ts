@@ -37,8 +37,9 @@ const settleHand = (
 
     if (dealerHandValue.value > 21) return { handIndex, outcome: 'win', payout: bet };
 
-    if (hand.value().value > dealerHandValue.value) return { handIndex, outcome: 'win', payout: bet };
-    if (hand.value().value < dealerHandValue.value) return { handIndex, outcome: 'lose', payout: -bet };
+    const playerHandValue = hand.value();
+    if (playerHandValue.value > dealerHandValue.value) return { handIndex, outcome: 'win', payout: bet };
+    if (playerHandValue.value < dealerHandValue.value) return { handIndex, outcome: 'lose', payout: -bet };
 
     return { handIndex, outcome: 'push', payout: 0 };
 };

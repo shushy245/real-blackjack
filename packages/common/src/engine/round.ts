@@ -93,7 +93,7 @@ const applyHit = (state: RoundState): RoundState => {
     const newHands = state.playerHands.map((h, i) => (i === state.activeHandIndex ? newHand : h));
     const updated: RoundState = { ...state, shoe: newShoe, playerHands: newHands };
 
-    if (newHand.isBust() || newHand.value().value === 21) return advanceActiveHand(updated);
+    if (newHand.value().value >= 21) return advanceActiveHand(updated);
 
     return updated;
 };
