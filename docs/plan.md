@@ -198,6 +198,13 @@ type LeaderboardStore = {
 2. Sound events: deal · flip · chip clink · win chime · bust buzz
 3. expo-haptics: deal · win · bust
 
+**Epic 6 — Gameplay Feel**
+1. A6.1 Slow hole-card flip (FLIP_DURATION_MS 450 → 900)
+2. A6.5 Default to previous bet; remove Repeat button
+3. A6.2 Staggered dealer cards (1 sec between each, initial deal + draw turn)
+4. A6.3 Auto-advance round (remove Collect button; fire CollectResult 2.5s after all cards visible)
+5. A6.4 Nicubunu ornamental card assets (replace custom SVG renderer)
+
 ### Post-MVP
 - Online shared leaderboard (requires backend + auth — separate planning session)
 - LLM strategy advisor UI (plugs into `getState` / `getLegalMoves` seam — no engine changes)
@@ -848,6 +855,107 @@ Fix: add explicit braces: `const handlePlaceBet = (amount: number): void => { st
 
 - **BF8-1** (`payouts.ts`): re-imported `isBlackjack` for both `playerBJ` and `dealerBJ` checks — BF7 had inlined the three-condition expression twice, creating a knowledge fork against the canonical helper still used in `round.ts` and `TableLayout.tsx`
 - **BF8-2** (`game-store.ts`): added braces to the `action` arrow (`(move) => set(...)` → `(move) => { set(...); }`) — void/side-effectful arrow must keep braces per CLAUDE.md
+
+---
+
+---
+
+## Epic 6 — Gameplay Feel
+
+Implementation order: A6.1 → A6.5 → A6.2 → A6.3 → A6.4
+
+---
+
+### Story A6.1 — Slow hole-card flip
+
+**File**: `packages/app/src/animations/constants.ts`
+
+Change `FLIP_DURATION_MS` from `450` to `900`. `FlippableCard.tsx` already reads the constant — no other changes needed.
+
+**Verify**: stand a hand, watch hole-card flip feel like a physical card turn.
+
+---
+
+### Story A6.5 — Default to previous bet; remove Repeat button
+
+**File**: `packages/app/src/components/bet-controls/BetControls.tsx`
+
+`BetControls` unmounts during an active round and re-mounts at betting phase, so the `useState` initial value fires fresh each time.
+
+```ts
+// before
+const [pendingBet, setPendingBet] = useState(0);
+
+// after — clamp to balance; fall back to 0 on first round
+const [pendingBet, setPendingBet] = useState(lastBet > 0 ? Math.min(lastBet, balance) : 0);
+```
+
+Remove: `handleRepeat`, `canRepeat`, `onRepeat` prop from `ActionRow`, the REPEAT `TouchableOpacity`. `ActionRow` becomes CLEAR | DEAL. The `lastBet` prop stays (needed as initialiser source).
+
+**Verify**: complete a round with $50 bet → bet counter shows $50 on next betting phase; no REPEAT button.
+
+---
+
+### Story A6.2 — Staggered dealer cards
+
+**Files**: `packages/app/src/components/hand/DealerHand.tsx`, `packages/app/src/animations/constants.ts`, `packages/app/src/screens/table/TableLayout.tsx`
+
+Add `DEALER_CARD_DELAY_MS = 1000` to `constants.ts`.
+
+Add `visibleCount` state to `DealerCardFan`. A `useEffect` runs when `cards.length` or `visibleCount` changes:
+- If `visibleCount < cards.length`: schedule `setTimeout(DEALER_CARD_DELAY_MS)` → `setVisibleCount(prev + 1)` (first card uses 0 ms)
+- If `cards.length` drops to 0 (new round): reset `visibleCount` to 0
+- When `visibleCount === cards.length` (and `> 0`): fire `onAllCardsVisible()` callback
+
+Render `cards.slice(0, visibleCount)` — each card still gets its `DealingCard` spring on mount; stagger controls when it mounts.
+
+Add `onAllCardsVisible: () => void` to `DealerHandProps`; thread it down through `DealerHand` → `DealerCardFan`. Pass the prop from `TableLayout`.
+
+Hole card timing: cards[1] appears 1 s after cards[0] face-down; the `FlippableCard` flip (900 ms) plays independently when `holeRevealed` becomes true — no explicit coordination needed.
+
+**Verify**: initial deal → two dealer cards 1 s apart; dealer draw → each new card 1 s after last.
+
+---
+
+### Story A6.3 — Auto-advance round (remove Collect button)
+
+**File**: `packages/app/src/screens/table/TableLayout.tsx`
+
+Remove the COLLECT button and `handleCollect` handler.
+
+Add `allCardsVisibleRef = useRef(false)`. Reset it to `false` whenever `round` transitions from defined → undefined (new round). The `onAllCardsVisible` callback from A6.2 sets `allCardsVisibleRef.current = true`; if phase is already `'settling'`, it also starts a 2500 ms timer to dispatch `CollectResult`.
+
+A `useEffect` on `round?.phase === 'settling'`: if `allCardsVisibleRef.current` is true, start the 2500 ms timer immediately; if false, the callback above will start it when cards finish appearing.
+
+This handles both cases:
+- **Short dealer hand** (2 cards, possible BJ): hole flip (~900 ms) → all-visible → 2500 ms → collect
+- **Long dealer hand** (3–5 cards): staggered draws → all-visible after last card → 2500 ms → collect
+
+Result label and amount display during the 2500 ms window unchanged.
+
+**Verify**: complete a hand → result appears → ~2.5 s later balance updates and bet controls reappear; no tap needed.
+
+---
+
+### Story A6.4 — Nicubunu ornamental card assets
+
+**Files**: `packages/app/assets/cards/` (new), `packages/app/src/components/card/cardImages.ts` (new), `packages/app/src/components/card/CardView.utils.ts`, `packages/app/src/components/card/CardView.tsx`
+
+**Step 1 — Acquire assets**: download nicubunu ornamental SVG card set (52 cards + back) from nicubunu.ro / Open Game Art. Export each SVG to PNG at @3x resolution (script: Inkscape CLI or `svgexport`). Naming: `{rank}_{suit}.png` (e.g., `ace_spades.png`, `2_hearts.png`, `king_diamonds.png`); back: `card_back.png`. Place all in `packages/app/assets/cards/`.
+
+**Step 2 — Asset map**: create `cardImages.ts` with 53 static `require()` calls (Metro needs static analysis for dynamic bundling):
+```ts
+export const cardImages = {
+  ace_spades: require('../../../assets/cards/ace_spades.png'),
+  // ... all 52 cards
+  back:       require('../../../assets/cards/card_back.png'),
+} as const;
+```
+Add `getCardImage(card: Card, face: 'up' | 'down')` to `CardView.utils.ts` mapping rank+suit → key.
+
+**Step 3 — Replace renderer**: in `CardView.tsx`, replace react-native-svg JSX with `<Image>` (react-native or expo-image). The `width` prop drives sizing; maintain `CARD_RATIO` for height. `face` prop controls front vs `card_back.png`.
+
+**Verify**: all 52 cards render correctly face-up; hole card shows back; no blank images.
 
 ---
 
