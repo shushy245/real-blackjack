@@ -3,7 +3,7 @@ import type { TextStyle } from 'react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Card, Hand } from '@real-blackjack/common';
 
-import { CardView, DealingCard } from '~/components/card';
+import { CardView } from '~/components/card';
 
 import {
     CARD_HEIGHT,
@@ -34,9 +34,7 @@ const CardFan = ({ cards }: CardFanProps): JSX.Element => (
     <View style={styles.fan}>
         {cards.map((card, i) => (
             <View key={i} style={i === 0 ? undefined : styles.cardOverlap}>
-                <DealingCard>
-                    <CardView card={card} face="up" width={CARD_WIDTH} />
-                </DealingCard>
+                <CardView card={card} face="up" width={CARD_WIDTH} />
             </View>
         ))}
     </View>
