@@ -1,41 +1,46 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, it } from 'vitest';
 
 import { createDeck } from './deck';
 import { Rank, Suit } from './types';
+import { makeDeckDriver } from './deck.driver';
 
 describe('Rank', () => {
+    let driver: ReturnType<typeof makeDeckDriver>;
+    beforeEach(() => {
+        driver = makeDeckDriver();
+    });
+
     it('has exactly 13 values', () => {
-        expect(Object.values(Rank).length).toBe(13);
+        driver.assert.length(Object.values(Rank), 13);
     });
 });
 
 describe('Suit', () => {
+    let driver: ReturnType<typeof makeDeckDriver>;
+    beforeEach(() => {
+        driver = makeDeckDriver();
+    });
+
     it('has exactly 4 values', () => {
-        expect(Object.values(Suit).length).toBe(4);
+        driver.assert.length(Object.values(Suit), 4);
     });
 });
 
 describe('createDeck', () => {
+    let driver: ReturnType<typeof makeDeckDriver>;
+    beforeEach(() => {
+        driver = makeDeckDriver();
+    });
+
     it('returns exactly 52 cards', () => {
-        expect(createDeck()).toHaveLength(52);
+        driver.assert.length(createDeck(), 52);
     });
 
     it('contains no duplicate cards — every Rank × Suit exactly once', () => {
-        const deck = createDeck();
-        const keys = deck.map((c) => `${c.rank}-${c.suit}`);
-        const unique = new Set(keys);
-
-        expect(unique.size).toBe(52);
+        driver.assert.uniqueCardCount(createDeck(), 52);
     });
 
     it('each card has a rank and a suit', () => {
-        const deck = createDeck();
-        const allRanks = Object.values(Rank);
-        const allSuits = Object.values(Suit);
-
-        for (const card of deck) {
-            expect(allRanks).toContain(card.rank);
-            expect(allSuits).toContain(card.suit);
-        }
+        driver.assert.eachCardHasValidRankAndSuit(createDeck());
     });
 });

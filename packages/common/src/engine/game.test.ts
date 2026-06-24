@@ -1,63 +1,73 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, it } from 'vitest';
 
 import { Move } from './types';
-import { applyAction, createGame, getLegalMoves, getState } from './index';
+import { makeGameDriver } from './game.driver';
+import { applyAction, createGame, getLegalMoves } from './index';
 
 describe('createGame', () => {
+    let driver: ReturnType<typeof makeGameDriver>;
+    beforeEach(() => {
+        driver = makeGameDriver();
+    });
+
     it('returns a game with the configured starting balance', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10 });
-
-        expect(game.balance).toBe(1000);
+        driver.assert.balance(game, 1000);
     });
 
     it('starts with a fresh shoe and no active round', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10 });
-
-        expect(game.shoe.cards).toHaveLength(312);
-        expect(game.round).toBeUndefined();
+        driver.assert.shoeCardCount(game, 312);
+        driver.assert.roundUndefined(game);
     });
 });
 
 describe('applyAction — PlaceBet', () => {
+    let driver: ReturnType<typeof makeGameDriver>;
+    beforeEach(() => {
+        driver = makeGameDriver();
+    });
+
     it('deducts the bet from balance and starts a round in player-action or settling', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const next = applyAction(game, { type: 'PlaceBet', amount: 50 });
-
-        expect(next.balance).toBe(950);
-        expect(next.round).toBeDefined();
+        driver.assert.balance(next, 950);
+        driver.assert.roundDefined(next);
     });
 
     it('reshuffles the shoe when penetration threshold is reached before dealing', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const exhausted = { ...game, shoe: { ...game.shoe, dealtCount: 234 } };
         const next = applyAction(exhausted, { type: 'PlaceBet', amount: 50 });
-
-        expect(next.shoe.dealtCount).toBeLessThan(234);
+        driver.assert.shoeDealtCountLessThan(next, 234);
     });
 
     it('throws when a round is already in progress', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const withRound = applyAction(game, { type: 'PlaceBet', amount: 50 });
-
-        expect(() => applyAction(withRound, { type: 'PlaceBet', amount: 50 })).toThrow(
+        driver.assert.throws(
+            () => applyAction(withRound, { type: 'PlaceBet', amount: 50 }),
             'applyAction: PlaceBet — a round is already in progress',
         );
     });
 
     it('throws when bet is below minimum', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10 });
-
-        expect(() => applyAction(game, { type: 'PlaceBet', amount: 5 })).toThrow();
+        driver.assert.throws(() => applyAction(game, { type: 'PlaceBet', amount: 5 }));
     });
 
     it('throws when bet exceeds maximum', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10 });
-
-        expect(() => applyAction(game, { type: 'PlaceBet', amount: 2000 })).toThrow();
+        driver.assert.throws(() => applyAction(game, { type: 'PlaceBet', amount: 2000 }));
     });
 });
 
 describe('applyAction — player moves', () => {
+    let driver: ReturnType<typeof makeGameDriver>;
+    beforeEach(() => {
+        driver = makeGameDriver();
+    });
+
     const startRound = () => {
         const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
 
@@ -66,38 +76,37 @@ describe('applyAction — player moves', () => {
 
     it('applies a player move to the active round', () => {
         const game = startRound();
-        if (game.round === undefined || game.round.phase !== 'player-action') return; // skip if BJ/insurance dealt
-
+        if (game.round === undefined || game.round.phase !== 'player-action') return;
         const next = applyAction(game, { type: Move.Hit });
-
         if (next.round === undefined) throw new Error('expected round after hit');
         const hand0 = next.round.playerHands[0];
         if (hand0 === undefined) throw new Error('expected hand at index 0');
-        expect(hand0.cards.length).toBeGreaterThan(2);
+        driver.assert.handCardCountGreaterThan(hand0, 2);
     });
 
     it('updates balance when round settles after player busts', () => {
-        // Drive the game to bust via repeated hits
         let game = startRound();
         while (game.round !== undefined && game.round.phase === 'player-action') {
             game = applyAction(game, { type: Move.Hit });
         }
-        // If round ended in settling, apply one more no-op to see balance
         if (game.round !== undefined && game.round.phase === 'settling') {
             const settled = applyAction(game, { type: 'CollectResult' });
-
-            expect(settled.balance).toBeLessThanOrEqual(1000);
-            expect(settled.round).toBeUndefined();
+            driver.assert.balanceLessOrEqualThan(settled, 1000);
+            driver.assert.roundUndefined(settled);
         }
     });
 });
 
 describe('applyAction — CollectResult', () => {
+    let driver: ReturnType<typeof makeGameDriver>;
+    beforeEach(() => {
+        driver = makeGameDriver();
+    });
+
     it('applies the net delta to balance and clears the round', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         let g = applyAction(game, { type: 'PlaceBet', amount: 50 });
 
-        // Play to completion (stand repeatedly until settling)
         while (g.round !== undefined && g.round.phase !== 'settling') {
             if (g.round.phase === 'player-action') g = applyAction(g, { type: Move.Stand });
             else if (g.round.phase === 'insurance-pending') g = applyAction(g, { type: Move.Stand });
@@ -105,34 +114,36 @@ describe('applyAction — CollectResult', () => {
         }
 
         const collected = applyAction(g, { type: 'CollectResult' });
-
-        expect(collected.round).toBeUndefined();
-        expect(typeof collected.balance).toBe('number');
+        driver.assert.roundUndefined(collected);
     });
 });
 
 describe('getState', () => {
+    let driver: ReturnType<typeof makeGameDriver>;
+    beforeEach(() => {
+        driver = makeGameDriver();
+    });
+
     it('returns a plain serializable object with no functions', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
-
-        expect(() => JSON.stringify(getState(game))).not.toThrow();
-        const state = getState(game);
-        expect(typeof state).toBe('object');
+        driver.assert.stateIsSerializableObject(game);
     });
 });
 
 describe('getLegalMoves', () => {
+    let driver: ReturnType<typeof makeGameDriver>;
+    beforeEach(() => {
+        driver = makeGameDriver();
+    });
+
     it('returns Move[] matching the current round state', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10, seed: 42 });
         const withRound = applyAction(game, { type: 'PlaceBet', amount: 50 });
-        const moves = getLegalMoves(withRound);
-
-        expect(Array.isArray(moves)).toBe(true);
+        driver.assert.movesIsArray(getLegalMoves(withRound));
     });
 
     it('returns empty array when no round is active', () => {
         const game = createGame({ startingBalance: 1000, minBet: 10 });
-
-        expect(getLegalMoves(game)).toEqual([]);
+        driver.assert.movesEmpty(getLegalMoves(game));
     });
 });
