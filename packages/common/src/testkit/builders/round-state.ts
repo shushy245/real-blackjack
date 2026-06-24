@@ -15,25 +15,21 @@ const defaultDealerHand: RoundState['dealerHand'] = Hand.of([
 ]);
 
 class RoundStateBuilder {
-    private state: RoundState;
-
-    constructor(overrides: Partial<RoundState> = {}) {
-        this.state = {
-            phase: overrides.phase ?? 'player-action',
-            shoe: overrides.shoe ?? { cards: [], dealtCount: 0 },
-            playerHands: overrides.playerHands ?? defaultPlayerHands,
-            dealerHand: overrides.dealerHand ?? defaultDealerHand,
-            holeCardRevealed: overrides.holeCardRevealed ?? false,
-            activeHandIndex: overrides.activeHandIndex ?? 0,
-            originalBet: overrides.originalBet ?? 50,
-            activeBet: overrides.activeBet ?? 50,
-            handBets: overrides.handBets ?? [50],
-            balance: overrides.balance ?? 500,
-            insuranceBet: overrides.insuranceBet,
-            insuranceTaken: overrides.insuranceTaken ?? false,
-            splitOccurred: overrides.splitOccurred ?? false,
-        };
-    }
+    private state: RoundState = {
+        phase: 'player-action',
+        shoe: { cards: [], dealtCount: 0 },
+        playerHands: defaultPlayerHands,
+        dealerHand: defaultDealerHand,
+        holeCardRevealed: false,
+        activeHandIndex: 0,
+        originalBet: 50,
+        activeBet: 50,
+        handBets: [50],
+        balance: 500,
+        insuranceBet: undefined,
+        insuranceTaken: false,
+        splitOccurred: false,
+    };
 
     withPhase(phase: RoundState['phase']): this {
         this.state = { ...this.state, phase };
@@ -94,5 +90,4 @@ class RoundStateBuilder {
     }
 }
 
-export const aRoundState = (...args: ConstructorParameters<typeof RoundStateBuilder>): RoundStateBuilder =>
-    new RoundStateBuilder(...args);
+export const aRoundState = (): RoundStateBuilder => new RoundStateBuilder();

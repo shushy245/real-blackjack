@@ -4,11 +4,7 @@ import { Rank, Suit, type Card } from '../../engine/types';
 const SHOE_SIZE = 312;
 
 class ShoeBuilder {
-    private cards: readonly Card[];
-
-    constructor(cards: Card[] = []) {
-        this.cards = [...cards];
-    }
+    private cards: readonly Card[] = [];
 
     withCards(cards: Card[]): this {
         this.cards = [...cards];
@@ -26,4 +22,4 @@ class ShoeBuilder {
     }
 }
 
-export const aShoe = (...args: ConstructorParameters<typeof ShoeBuilder>): ShoeBuilder => new ShoeBuilder(...args);
+export const aShoe = (): ShoeBuilder => new ShoeBuilder();

@@ -23,30 +23,30 @@ describe('getLegalMoves', () => {
     });
 
     it('excludes Double Down on 3+ card hand', () => {
-        const state = aRoundState({
-            playerHands: [aHand().withRanks([Rank.Three, Rank.Four, Rank.Seven]).build()],
-        }).build();
+        const state = aRoundState()
+            .withPlayerHands([aHand().withRanks([Rank.Three, Rank.Four, Rank.Seven]).build()])
+            .build();
         const moves = getLegalMoves(state);
         driver.assert.excludes(moves, Move.Double);
     });
 
     it('excludes Double Down when balance < bet', () => {
-        const state = aRoundState({ balance: 40 }).build();
+        const state = aRoundState().withBalance(40).build();
         const moves = getLegalMoves(state);
         driver.assert.excludes(moves, Move.Double);
     });
 
     it('includes Split on 2-card hand with matching ranks and fewer than 4 hands', () => {
-        const state = aRoundState({
-            playerHands: [
+        const state = aRoundState()
+            .withPlayerHands([
                 aHand()
                     .withCards([
                         aCard().withRank(Rank.Eight).withSuit(Suit.Hearts).build(),
                         aCard().withRank(Rank.Eight).withSuit(Suit.Spades).build(),
                     ])
                     .build(),
-            ],
-        }).build();
+            ])
+            .build();
         const moves = getLegalMoves(state);
         driver.assert.contains(moves, Move.Split);
     });
@@ -57,24 +57,24 @@ describe('getLegalMoves', () => {
     });
 
     it('excludes Split when balance < originalBet', () => {
-        const state = aRoundState({
-            playerHands: [
+        const state = aRoundState()
+            .withPlayerHands([
                 aHand()
                     .withCards([
                         aCard().withRank(Rank.Eight).withSuit(Suit.Hearts).build(),
                         aCard().withRank(Rank.Eight).withSuit(Suit.Spades).build(),
                     ])
                     .build(),
-            ],
-            balance: 40,
-        }).build();
+            ])
+            .withBalance(40)
+            .build();
         const moves = getLegalMoves(state);
         driver.assert.excludes(moves, Move.Split);
     });
 
     it('excludes Split when already at 4 hands', () => {
-        const state = aRoundState({
-            playerHands: [
+        const state = aRoundState()
+            .withPlayerHands([
                 aHand()
                     .withCards([
                         aCard().withRank(Rank.Eight).withSuit(Suit.Hearts).build(),
@@ -84,16 +84,16 @@ describe('getLegalMoves', () => {
                 aHand().withRanks([Rank.Eight, Rank.Three]).build(),
                 aHand().withRanks([Rank.Eight, Rank.Five]).build(),
                 aHand().withRanks([Rank.Two, Rank.Four]).build(),
-            ],
-        }).build();
+            ])
+            .build();
         const moves = getLegalMoves(state);
         driver.assert.excludes(moves, Move.Split);
     });
 
     it('includes Insurance when dealer shows Ace, first action, not yet taken', () => {
-        const state = aRoundState({
-            dealerHand: aHand().withRanks([Rank.Ace, Rank.Six]).build(),
-        }).build();
+        const state = aRoundState()
+            .withDealerHand(aHand().withRanks([Rank.Ace, Rank.Six]).build())
+            .build();
         const moves = getLegalMoves(state);
         driver.assert.contains(moves, Move.Insurance);
     });
@@ -104,52 +104,52 @@ describe('getLegalMoves', () => {
     });
 
     it('excludes Insurance when not first action (3+ cards on active hand)', () => {
-        const state = aRoundState({
-            dealerHand: aHand().withRanks([Rank.Ace, Rank.Six]).build(),
-            playerHands: [aHand().withRanks([Rank.Three, Rank.Four, Rank.Seven]).build()],
-        }).build();
+        const state = aRoundState()
+            .withDealerHand(aHand().withRanks([Rank.Ace, Rank.Six]).build())
+            .withPlayerHands([aHand().withRanks([Rank.Three, Rank.Four, Rank.Seven]).build()])
+            .build();
         const moves = getLegalMoves(state);
         driver.assert.excludes(moves, Move.Insurance);
     });
 
     it('excludes Insurance when already taken this round', () => {
-        const state = aRoundState({
-            dealerHand: aHand().withRanks([Rank.Ace, Rank.Six]).build(),
-            insuranceTaken: true,
-        }).build();
+        const state = aRoundState()
+            .withDealerHand(aHand().withRanks([Rank.Ace, Rank.Six]).build())
+            .withInsuranceTaken(true)
+            .build();
         const moves = getLegalMoves(state);
         driver.assert.excludes(moves, Move.Insurance);
     });
 
     it('returns empty array when phase is not player-action or insurance-pending', () => {
-        const state = aRoundState({ phase: 'dealer-turn' }).build();
+        const state = aRoundState().withPhase('dealer-turn').build();
         driver.assert.equals(getLegalMoves(state), []);
     });
 
     it('returns [Insurance, Stand] when phase is insurance-pending', () => {
-        const state = aRoundState({ phase: 'insurance-pending' }).build();
+        const state = aRoundState().withPhase('insurance-pending').build();
         driver.assert.equals(getLegalMoves(state), [Move.Insurance, Move.Stand]);
     });
 
     it('does not allow additional moves when user has blackjack and dealer has a non-ace (Ace first)', () => {
-        const state = aRoundState({
-            playerHands: [aHand().withRanks([Rank.Ace, Rank.King]).build()],
-        }).build();
+        const state = aRoundState()
+            .withPlayerHands([aHand().withRanks([Rank.Ace, Rank.King]).build()])
+            .build();
         driver.assert.equals(getLegalMoves(state), []);
     });
 
     it('does not allow additional moves when user has blackjack and dealer has a non-ace (King first)', () => {
-        const state = aRoundState({
-            playerHands: [aHand().withRanks([Rank.King, Rank.Ace]).build()],
-        }).build();
+        const state = aRoundState()
+            .withPlayerHands([aHand().withRanks([Rank.King, Rank.Ace]).build()])
+            .build();
         driver.assert.equals(getLegalMoves(state), []);
     });
 
     it('does not allow additional moves when user has blackjack and dealer has an ace', () => {
-        const state = aRoundState({
-            playerHands: [aHand().withRanks([Rank.Ace, Rank.King]).build()],
-            dealerHand: aHand().withRanks([Rank.Ace, Rank.King]).build(),
-        }).build();
+        const state = aRoundState()
+            .withPlayerHands([aHand().withRanks([Rank.Ace, Rank.King]).build()])
+            .withDealerHand(aHand().withRanks([Rank.Ace, Rank.King]).build())
+            .build();
         driver.assert.equals(getLegalMoves(state), []);
     });
 });

@@ -9,7 +9,9 @@ import { applyRoundAction, createRound, runDealerTurn } from './round';
 
 // deal phase order: p1, d-up, p2, d-hole, then extra cards
 const dealerTurnRound = (playerCards: [Card, Card], dealerUp: Card, dealerHole: Card, extraCards: Card[]) => {
-    const shoe = aShoe([playerCards[0], dealerUp, playerCards[1], dealerHole, ...extraCards]).build();
+    const shoe = aShoe()
+        .withCards([playerCards[0], dealerUp, playerCards[1], dealerHole, ...extraCards])
+        .build();
 
     return createRound(50, 500, shoe);
 };
@@ -92,13 +94,15 @@ describe('settleRound', () => {
     });
 
     it('player bust → loss regardless of dealer result', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Seven).build(),
-            aCard().withRank(Rank.Six).build(),
-            aCard().withRank(Rank.Nine).build(),
-            aCard().withRank(Rank.King).build(),
-            aCard().withRank(Rank.King).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Seven).build(),
+                aCard().withRank(Rank.Six).build(),
+                aCard().withRank(Rank.Nine).build(),
+                aCard().withRank(Rank.King).build(),
+                aCard().withRank(Rank.King).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         const hit = applyRoundAction(round, { type: Move.Hit });
         const settled = runDealerTurn(hit);
@@ -108,13 +112,15 @@ describe('settleRound', () => {
     });
 
     it('dealer bust, player not bust → player wins 1:1', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Seven).build(),
-            aCard().withRank(Rank.Six).build(),
-            aCard().withRank(Rank.King).build(),
-            aCard().withRank(Rank.King).build(),
-            aCard().withRank(Rank.King).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Seven).build(),
+                aCard().withRank(Rank.Six).build(),
+                aCard().withRank(Rank.King).build(),
+                aCard().withRank(Rank.King).build(),
+                aCard().withRank(Rank.King).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         const stood = applyRoundAction(round, { type: Move.Stand });
         const settled = runDealerTurn(stood);
@@ -124,13 +130,15 @@ describe('settleRound', () => {
     });
 
     it('player higher total → win 1:1', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Nine).build(),
-            aCard().withRank(Rank.Six).build(),
-            aCard().withRank(Rank.King).build(),
-            aCard().withRank(Rank.King).build(),
-            aCard().withRank(Rank.Two).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Nine).build(),
+                aCard().withRank(Rank.Six).build(),
+                aCard().withRank(Rank.King).build(),
+                aCard().withRank(Rank.King).build(),
+                aCard().withRank(Rank.Two).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         const stood = applyRoundAction(round, { type: Move.Stand });
         const settled = runDealerTurn(stood);
@@ -140,12 +148,14 @@ describe('settleRound', () => {
     });
 
     it('equal totals (non-BJ) → push', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Seven).build(),
-            aCard().withRank(Rank.Seven).build(),
-            aCard().withRank(Rank.King).build(),
-            aCard().withRank(Rank.King).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Seven).build(),
+                aCard().withRank(Rank.Seven).build(),
+                aCard().withRank(Rank.King).build(),
+                aCard().withRank(Rank.King).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         const stood = applyRoundAction(round, { type: Move.Stand });
         const settled = runDealerTurn(stood);
@@ -155,12 +165,14 @@ describe('settleRound', () => {
     });
 
     it('player BJ, dealer not BJ → win 3:2', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Ace).build(),
-            aCard().withRank(Rank.Six).build(),
-            aCard().withRank(Rank.King).build(),
-            aCard().withRank(Rank.Nine).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Ace).build(),
+                aCard().withRank(Rank.Six).build(),
+                aCard().withRank(Rank.King).build(),
+                aCard().withRank(Rank.Nine).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         const result = settleRound(round);
         driver.assert.outcome(result, 0, 'blackjack');
@@ -168,12 +180,14 @@ describe('settleRound', () => {
     });
 
     it('player BJ, dealer BJ → push', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Ace).withSuit(Suit.Spades).build(),
-            aCard().withRank(Rank.Ace).withSuit(Suit.Hearts).build(),
-            aCard().withRank(Rank.King).withSuit(Suit.Spades).build(),
-            aCard().withRank(Rank.King).withSuit(Suit.Hearts).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Ace).withSuit(Suit.Spades).build(),
+                aCard().withRank(Rank.Ace).withSuit(Suit.Hearts).build(),
+                aCard().withRank(Rank.King).withSuit(Suit.Spades).build(),
+                aCard().withRank(Rank.King).withSuit(Suit.Hearts).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         const result = settleRound(round);
         driver.assert.outcome(result, 0, 'push');
@@ -181,12 +195,14 @@ describe('settleRound', () => {
     });
 
     it('insurance taken + dealer BJ → netDelta is 0 (insurance profit covers main bet loss)', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Seven).build(),
-            aCard().withRank(Rank.Ace).build(),
-            aCard().withRank(Rank.Nine).build(),
-            aCard().withRank(Rank.King).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Seven).build(),
+                aCard().withRank(Rank.Ace).build(),
+                aCard().withRank(Rank.Nine).build(),
+                aCard().withRank(Rank.King).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         driver.assert.phase(round, 'insurance-pending');
         const accepted = applyRoundAction(round, { type: Move.Insurance });
@@ -196,12 +212,14 @@ describe('settleRound', () => {
     });
 
     it('insurance declined + dealer BJ → player loses main bet (no free push)', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Seven).build(),
-            aCard().withRank(Rank.Ace).build(),
-            aCard().withRank(Rank.Nine).build(),
-            aCard().withRank(Rank.King).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Seven).build(),
+                aCard().withRank(Rank.Ace).build(),
+                aCard().withRank(Rank.Nine).build(),
+                aCard().withRank(Rank.King).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         const declined = applyRoundAction(round, { type: Move.Stand });
         driver.assert.phase(declined, 'settling');
@@ -210,32 +228,34 @@ describe('settleRound', () => {
     });
 
     it('split hand with natural 21 (Ace + ten-value) pays 1:1, not 3:2', () => {
-        const splitRound = aRoundState({
-            phase: 'settling',
-            playerHands: [
+        const splitRound = aRoundState()
+            .withPhase('settling')
+            .withPlayerHands([
                 aHand().withRanks([Rank.Ace, Rank.King]).build(),
                 aHand().withRanks([Rank.Eight, Rank.Nine]).build(),
-            ],
-            dealerHand: aHand().withRanks([Rank.Six, Rank.Ten]).build(),
-            holeCardRevealed: true,
-            activeHandIndex: 1,
-            handBets: [50, 50],
-            balance: 450,
-            splitOccurred: true,
-        }).build();
+            ])
+            .withDealerHand(aHand().withRanks([Rank.Six, Rank.Ten]).build())
+            .withHoleCardRevealed(true)
+            .withActiveHandIndex(1)
+            .withHandBets([50, 50])
+            .withBalance(450)
+            .withSplitOccurred(true)
+            .build();
         const result = settleRound(splitRound);
         driver.assert.outcome(result, 0, 'win');
         driver.assert.payout(result, 0, 50);
     });
 
     it('insurance + dealer no BJ → insurance lost; original bet settles normally', () => {
-        const shoe = aShoe([
-            aCard().withRank(Rank.Seven).build(),
-            aCard().withRank(Rank.Ace).build(),
-            aCard().withRank(Rank.Nine).build(),
-            aCard().withRank(Rank.Three).build(),
-            aCard().withRank(Rank.Four).build(),
-        ]).build();
+        const shoe = aShoe()
+            .withCards([
+                aCard().withRank(Rank.Seven).build(),
+                aCard().withRank(Rank.Ace).build(),
+                aCard().withRank(Rank.Nine).build(),
+                aCard().withRank(Rank.Three).build(),
+                aCard().withRank(Rank.Four).build(),
+            ])
+            .build();
         const round = createRound(50, 500, shoe);
         driver.assert.phase(round, 'insurance-pending');
         const accepted = applyRoundAction(round, { type: Move.Insurance });
