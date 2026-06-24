@@ -45,9 +45,6 @@ class BetControlsDriver {
         clear: (): void => {
             fireEvent.press(screen.getByTestId(BetControlsTestIds.ClearButton));
         },
-        repeat: (): void => {
-            fireEvent.press(screen.getByTestId(BetControlsTestIds.RepeatButton));
-        },
         deal: (): void => {
             fireEvent.press(screen.getByTestId(BetControlsTestIds.DealButton));
         },
@@ -62,12 +59,6 @@ class BetControlsDriver {
         },
         dealDisabled: (): void => {
             expect(screen.getByTestId(BetControlsTestIds.DealButton)).toBeDisabled();
-        },
-        repeatEnabled: (): void => {
-            expect(screen.getByTestId(BetControlsTestIds.RepeatButton)).not.toBeDisabled();
-        },
-        repeatDisabled: (): void => {
-            expect(screen.getByTestId(BetControlsTestIds.RepeatButton)).toBeDisabled();
         },
         chipEnabled: (denom: ChipDenomination): void => {
             expect(screen.getByTestId(BetControlsTestIds.ChipButton(denom))).not.toBeDisabled();

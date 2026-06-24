@@ -24,6 +24,20 @@ describe('clampBet', () => {
     });
 });
 
+describe('defaultPendingBet', () => {
+    it('returns 0 when lastBet is 0', () => {
+        driver.assert.defaultPendingBet(0, 1000, 0);
+    });
+
+    it('returns lastBet when it fits within balance', () => {
+        driver.assert.defaultPendingBet(100, 1000, 100);
+    });
+
+    it('clamps to balance when lastBet exceeds balance', () => {
+        driver.assert.defaultPendingBet(200, 50, 50);
+    });
+});
+
 describe('formatAmount', () => {
     it('formats zero as $0', () => {
         driver.assert.formatAmount(0, '$0');

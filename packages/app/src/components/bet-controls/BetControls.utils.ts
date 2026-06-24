@@ -20,7 +20,6 @@ export const BetControlsTestIds = {
     BetCounter: 'BetControlsTestIds.BetCounter',
     ChipButton: (denom: ChipDenomination): string => `BetControlsTestIds.ChipButton.${denom}`,
     ClearButton: 'BetControlsTestIds.ClearButton',
-    RepeatButton: 'BetControlsTestIds.RepeatButton',
     DealButton: 'BetControlsTestIds.DealButton',
 };
 
@@ -28,18 +27,11 @@ export const clampBet = (current: number, added: number, balance: number): numbe
 
 export const formatAmount = (amount: number): string => `$${amount}`;
 
+export const defaultPendingBet = ({ lastBet, balance }: { lastBet: number; balance: number }): number =>
+    lastBet > 0 ? Math.min(lastBet, balance) : 0;
+
 export const canDeal = ({ pendingBet, minBet }: { pendingBet: number; minBet: number }): boolean =>
     pendingBet >= minBet;
-
-export const canRepeatBet = ({
-    lastBet,
-    minBet,
-    balance,
-}: {
-    lastBet: number;
-    minBet: number;
-    balance: number;
-}): boolean => lastBet >= minBet && lastBet <= balance;
 
 export const isChipDisabled = ({
     denom,

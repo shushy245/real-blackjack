@@ -10,9 +10,9 @@ import {
     CHIP_DENOMINATIONS,
     type ChipDenomination,
     canDeal,
-    canRepeatBet,
     chipConfigMap,
     clampBet,
+    defaultPendingBet,
     formatAmount,
     isChipDisabled,
 } from './BetControls.utils';
@@ -25,13 +25,11 @@ type BetControlsProps = {
 };
 
 export const BetControls = ({ balance, minBet, lastBet, onPlaceBet }: BetControlsProps): JSX.Element => {
-    const [pendingBet, setPendingBet] = useState(0);
+    const [pendingBet, setPendingBet] = useState(defaultPendingBet({ lastBet, balance }));
 
     const handleChip = (chip: ChipDenomination): void => setPendingBet((prev) => clampBet(prev, chip, balance));
 
     const handleClear = (): void => setPendingBet(0);
-
-    const handleRepeat = (): void => setPendingBet(Math.min(lastBet, balance));
 
     const handleDeal = (): void => {
         if (!canDeal({ pendingBet, minBet })) return;
@@ -40,19 +38,12 @@ export const BetControls = ({ balance, minBet, lastBet, onPlaceBet }: BetControl
     };
 
     const isDealEnabled = canDeal({ pendingBet, minBet });
-    const isRepeatEnabled = canRepeatBet({ lastBet, minBet, balance });
 
     return (
         <View style={styles.container}>
             <BetCounter amount={pendingBet} />
             <ChipTray balance={balance} pendingBet={pendingBet} onChip={handleChip} />
-            <ActionRow
-                canDeal={isDealEnabled}
-                canRepeat={isRepeatEnabled}
-                onClear={handleClear}
-                onRepeat={handleRepeat}
-                onDeal={handleDeal}
-            />
+            <ActionRow canDeal={isDealEnabled} onClear={handleClear} onDeal={handleDeal} />
         </View>
     );
 };
@@ -89,13 +80,11 @@ const ChipTray = ({ balance, pendingBet, onChip }: ChipTrayProps): JSX.Element =
 
 type ActionRowProps = {
     canDeal: boolean;
-    canRepeat: boolean;
     onClear: () => void;
-    onRepeat: () => void;
     onDeal: () => void;
 };
 
-const ActionRow = ({ canDeal, canRepeat, onClear, onRepeat, onDeal }: ActionRowProps): JSX.Element => (
+const ActionRow = ({ canDeal, onClear, onDeal }: ActionRowProps): JSX.Element => (
     <View style={styles.actionRow}>
         <TouchableOpacity
             testID={BetControlsTestIds.ClearButton}
@@ -104,15 +93,6 @@ const ActionRow = ({ canDeal, canRepeat, onClear, onRepeat, onDeal }: ActionRowP
             activeOpacity={0.7}
         >
             <Text style={styles.secondaryBtnText}>{`CLEAR`}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-            testID={BetControlsTestIds.RepeatButton}
-            onPress={onRepeat}
-            disabled={!canRepeat}
-            style={[styles.secondaryBtn, !canRepeat ? styles.btnDisabled : undefined]}
-            activeOpacity={0.7}
-        >
-            <Text style={[styles.secondaryBtnText, !canRepeat ? styles.textDisabled : undefined]}>{`REPEAT`}</Text>
         </TouchableOpacity>
         <TouchableOpacity
             testID={BetControlsTestIds.DealButton}

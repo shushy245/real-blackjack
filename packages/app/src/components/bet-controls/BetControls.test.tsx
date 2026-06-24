@@ -36,13 +36,18 @@ describe('BetControls', () => {
             driver.assert.betCounter('$0');
         });
 
-        it('sets pending bet to lastBet when repeat is tapped', () => {
+        it('starts at lastBet when a previous bet exists', () => {
             driver.given.balance(500);
             driver.given.lastBet(100);
-            driver.given.minBet(10);
             driver.when.created();
-            driver.click.repeat();
             driver.assert.betCounter('$100');
+        });
+
+        it('clamps the initial bet to balance when lastBet exceeds balance', () => {
+            driver.given.balance(50);
+            driver.given.lastBet(100);
+            driver.when.created();
+            driver.assert.betCounter('$50');
         });
     });
 
@@ -89,38 +94,6 @@ describe('BetControls', () => {
             driver.click.chip(10);
             driver.click.deal();
             driver.assert.onPlaceNotCalled();
-        });
-    });
-
-    describe('repeat button', () => {
-        it('is disabled when lastBet is 0', () => {
-            driver.given.lastBet(0);
-            driver.given.minBet(10);
-            driver.when.created();
-            driver.assert.repeatDisabled();
-        });
-
-        it('is disabled when lastBet is below minBet', () => {
-            driver.given.lastBet(5);
-            driver.given.minBet(10);
-            driver.when.created();
-            driver.assert.repeatDisabled();
-        });
-
-        it('is disabled when lastBet exceeds balance', () => {
-            driver.given.lastBet(100);
-            driver.given.minBet(10);
-            driver.given.balance(50);
-            driver.when.created();
-            driver.assert.repeatDisabled();
-        });
-
-        it('is enabled when lastBet is valid and within balance', () => {
-            driver.given.lastBet(50);
-            driver.given.minBet(10);
-            driver.given.balance(500);
-            driver.when.created();
-            driver.assert.repeatEnabled();
         });
     });
 
