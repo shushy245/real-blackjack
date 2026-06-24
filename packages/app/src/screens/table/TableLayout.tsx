@@ -1,10 +1,10 @@
 import type { JSX } from 'react';
 import type { TextStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
 import type { RoundState } from '@real-blackjack/common';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Move, getLegalMoves, settleRound } from '@real-blackjack/common';
+import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { FullColumn } from '~/components/ui';
@@ -241,13 +241,17 @@ const PlayerZonePanel = ({ round, legalMoves, onMove }: PlayerZonePanelProps): J
         <View style={styles.playerZone}>
             <Animated.View style={[styles.flashOverlay, styles.flashGreen, winFlashStyle]} pointerEvents="none" />
             <Animated.View style={[styles.flashOverlay, styles.flashRed, bustFlashStyle]} pointerEvents="none" />
-            <View style={styles.handsRow}>
+            <Animated.View layout={LinearTransition.springify()} style={styles.handsRow}>
                 {round.playerHands.map((hand, i) => (
-                    <View key={i} style={i === round.activeHandIndex ? undefined : styles.handInactive}>
+                    <Animated.View
+                        key={i}
+                        entering={FadeIn.springify()}
+                        style={i === round.activeHandIndex ? undefined : styles.handInactive}
+                    >
                         <PlayerHand hand={hand} />
-                    </View>
+                    </Animated.View>
                 ))}
-            </View>
+            </Animated.View>
             {showActions && <ActionBar moves={legalMoves} phase={round.phase} onMove={onMove} />}
         </View>
     );
