@@ -1,5 +1,4 @@
 import type { JSX } from 'react';
-import { useCallback } from 'react';
 import type { TextStyle } from 'react-native';
 import type { RoundState } from '@real-blackjack/common';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
@@ -15,6 +14,7 @@ import { BetControls } from '~/components/bet-controls';
 import { DealerHand, PlayerHand } from '~/components/hand';
 import { useResultFeedback } from '~/animations/useResultFeedback';
 
+import { useAutoCollect } from './useAutoCollect';
 import {
     type ResultVariant,
     buildAmountText,
@@ -56,7 +56,7 @@ export const TableLayout = (): JSX.Element => {
     const isGameOver = round === undefined && checkGameOver(balance);
     const canCashOut = round === undefined && !isGameOver;
 
-    const handleAllDealerCardsVisible = useCallback((): void => {}, []);
+    const { onAllCardsVisible: handleAllDealerCardsVisible } = useAutoCollect(round, handleCollect);
 
     return (
         <FullColumn style={styles.table}>
@@ -73,7 +73,6 @@ export const TableLayout = (): JSX.Element => {
                     lastBet={lastBet}
                     isGameOver={isGameOver}
                     onPlaceBet={handlePlaceBet}
-                    onCollect={handleCollect}
                     onNewGame={newGame}
                 />
                 <Rail />
@@ -148,7 +147,6 @@ type BetZonePanelProps = {
     lastBet: number;
     isGameOver: boolean;
     onPlaceBet: (amount: number) => void;
-    onCollect: () => void;
     onNewGame: () => void;
 };
 
@@ -158,7 +156,6 @@ const BetZonePanel = ({
     lastBet,
     isGameOver,
     onPlaceBet,
-    onCollect,
     onNewGame,
 }: BetZonePanelProps): JSX.Element => {
     if (round === undefined) {
@@ -172,7 +169,7 @@ const BetZonePanel = ({
     }
 
     if (round.phase === 'settling') {
-        return <SettleDisplay round={round} onCollect={onCollect} />;
+        return <SettleDisplay round={round} />;
     }
 
     return (
@@ -191,9 +188,9 @@ const BetDisplay = ({ amount }: BetDisplayProps): JSX.Element => (
     </View>
 );
 
-type SettleDisplayProps = { round: RoundState; onCollect: () => void };
+type SettleDisplayProps = { round: RoundState };
 
-const SettleDisplay = ({ round, onCollect }: SettleDisplayProps): JSX.Element => {
+const SettleDisplay = ({ round }: SettleDisplayProps): JSX.Element => {
     const { netDelta, handResults } = settleRound(round);
     const variant = buildResultVariant(handResults, netDelta);
     const label = resultLabelMap[variant];
@@ -207,9 +204,6 @@ const SettleDisplay = ({ round, onCollect }: SettleDisplayProps): JSX.Element =>
                     <Text style={[styles.settleAmount, resultTextStyleMap[variant]]}>{amountText}</Text>
                 )}
             </View>
-            <TouchableOpacity onPress={onCollect} style={styles.collectBtn} activeOpacity={0.8}>
-                <Text style={styles.collectBtnText}>{`COLLECT`}</Text>
-            </TouchableOpacity>
         </View>
     );
 };
@@ -316,18 +310,9 @@ const styles = StyleSheet.create({
     betDisplayLabel: { color: 'rgba(196,164,74,0.5)', fontSize: 9, letterSpacing: 3 },
     betDisplayAmount: { color: '#C4A44A', fontSize: 20, fontWeight: 'bold' },
 
-    settleResult: { alignItems: 'center', marginBottom: 8 },
+    settleResult: { alignItems: 'center' },
     settleLabel: { fontSize: 18, fontWeight: 'bold', letterSpacing: 3 },
     settleAmount: { fontSize: 14, fontWeight: 'bold', letterSpacing: 1, marginTop: 2 },
-    collectBtn: {
-        paddingHorizontal: 32,
-        paddingVertical: 10,
-        borderRadius: 6,
-        borderWidth: 1.5,
-        borderColor: '#C4A44A',
-        backgroundColor: 'rgba(196,164,74,0.12)',
-    },
-    collectBtnText: { color: '#C4A44A', fontSize: 13, fontWeight: 'bold', letterSpacing: 3 },
 
     gameOverTitle: {
         color: '#C01120',
