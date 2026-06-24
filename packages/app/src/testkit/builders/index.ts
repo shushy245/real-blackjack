@@ -1,0 +1,1 @@
+export { aHand } from './hand';

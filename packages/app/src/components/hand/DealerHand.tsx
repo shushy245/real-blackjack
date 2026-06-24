@@ -1,8 +1,10 @@
 import type { JSX } from 'react';
 import type { TextStyle } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Card, Hand } from '@real-blackjack/common';
 
+import { DEALER_CARD_DELAY_MS } from '~/animations/constants';
 import { CardView, DealingCard, FlippableCard } from '~/components/card';
 
 import {
@@ -12,46 +14,79 @@ import {
     type ScoreBadgeVariant,
     buildBadgeVariant,
     buildScoreLabel,
+    hasMoreCardsToShow,
 } from './Hand.utils';
 
 type DealerHandProps = {
     hand: Hand;
     holeRevealed: boolean;
+    onAllCardsVisible: () => void;
 };
 
-export const DealerHand = ({ hand, holeRevealed }: DealerHandProps): JSX.Element => {
+export const DealerHand = ({ hand, holeRevealed, onAllCardsVisible }: DealerHandProps): JSX.Element => {
     const variant = buildBadgeVariant(hand);
     const label = buildScoreLabel(hand);
 
     return (
         <View style={styles.container}>
-            <DealerCardFan cards={hand.cards} holeRevealed={holeRevealed} />
+            <DealerCardFan cards={hand.cards} holeRevealed={holeRevealed} onAllCardsVisible={onAllCardsVisible} />
             {holeRevealed && <ScoreBadge label={label} variant={variant} />}
         </View>
     );
 };
 
-type DealerCardFanProps = { cards: readonly Card[]; holeRevealed: boolean };
+type DealerCardFanProps = {
+    cards: readonly Card[];
+    holeRevealed: boolean;
+    onAllCardsVisible: () => void;
+};
 
-const DealerCardFan = ({ cards, holeRevealed }: DealerCardFanProps): JSX.Element => (
-    <View style={styles.fan}>
-        {cards.map((card, i) => (
-            <View key={i} style={i === 0 ? undefined : styles.cardOverlap}>
-                <DealingCard>
-                    {i === 1 ? (
-                        <FlippableCard
-                            front={<CardView card={card} face="up" width={CARD_WIDTH} />}
-                            back={<CardView card={card} face="down" width={CARD_WIDTH} />}
-                            flipped={holeRevealed}
-                        />
-                    ) : (
-                        <CardView card={card} face="up" width={CARD_WIDTH} />
-                    )}
-                </DealingCard>
-            </View>
-        ))}
-    </View>
-);
+const DealerCardFan = ({ cards, holeRevealed, onAllCardsVisible }: DealerCardFanProps): JSX.Element => {
+    const [visibleCount, setVisibleCount] = useState(0);
+    const onAllCardsVisibleRef = useRef(onAllCardsVisible);
+    onAllCardsVisibleRef.current = onAllCardsVisible;
+
+    useEffect(() => {
+        if (cards.length === 0) {
+            setVisibleCount(0);
+
+            return;
+        }
+        if (hasMoreCardsToShow(visibleCount, cards.length)) {
+            const delay = visibleCount === 0 ? 0 : DEALER_CARD_DELAY_MS;
+            const timer = setTimeout(() => {
+                setVisibleCount((prev) => prev + 1);
+            }, delay);
+
+            return () => {
+                clearTimeout(timer);
+            };
+        }
+        onAllCardsVisibleRef.current();
+
+        return undefined;
+    }, [cards.length, visibleCount]);
+
+    return (
+        <View style={styles.fan}>
+            {cards.slice(0, visibleCount).map((card, i) => (
+                <View key={i} style={i === 0 ? undefined : styles.cardOverlap}>
+                    <DealingCard>
+                        {i === 1 ? (
+                            <FlippableCard
+                                front={<CardView card={card} face="up" width={CARD_WIDTH} />}
+                                back={<CardView card={card} face="down" width={CARD_WIDTH} />}
+                                flipped={holeRevealed}
+                            />
+                        ) : (
+                            <CardView card={card} face="up" width={CARD_WIDTH} />
+                        )}
+                    </DealingCard>
+                </View>
+            ))}
+        </View>
+    );
+};
 
 type ScoreBadgeProps = { label: string; variant: ScoreBadgeVariant };
 

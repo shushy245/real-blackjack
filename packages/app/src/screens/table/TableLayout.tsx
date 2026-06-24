@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useCallback } from 'react';
 import type { TextStyle } from 'react-native';
 import type { RoundState } from '@real-blackjack/common';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
@@ -55,6 +56,8 @@ export const TableLayout = (): JSX.Element => {
     const isGameOver = round === undefined && checkGameOver(balance);
     const canCashOut = round === undefined && !isGameOver;
 
+    const handleAllDealerCardsVisible = useCallback((): void => {}, []);
+
     return (
         <FullColumn style={styles.table}>
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -62,7 +65,7 @@ export const TableLayout = (): JSX.Element => {
             </View>
             <View style={[styles.content, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
                 <BalanceBar balance={balance} canCashOut={canCashOut} onCashOut={handleCashOut} />
-                <DealerZone round={round} />
+                <DealerZone round={round} onAllCardsVisible={handleAllDealerCardsVisible} />
                 <Rail />
                 <BetZonePanel
                     round={round}
@@ -111,9 +114,9 @@ const BalanceBar = ({ balance, canCashOut, onCashOut }: BalanceBarProps): JSX.El
     </View>
 );
 
-type DealerZoneProps = { round: RoundState | undefined };
+type DealerZoneProps = { round: RoundState | undefined; onAllCardsVisible: () => void };
 
-const DealerZone = ({ round }: DealerZoneProps): JSX.Element => {
+const DealerZone = ({ round, onAllCardsVisible }: DealerZoneProps): JSX.Element => {
     if (round === undefined) {
         return (
             <View style={styles.dealerZone}>
@@ -124,7 +127,11 @@ const DealerZone = ({ round }: DealerZoneProps): JSX.Element => {
 
     return (
         <View style={styles.dealerZone}>
-            <DealerHand hand={round.dealerHand} holeRevealed={round.holeCardRevealed} />
+            <DealerHand
+                hand={round.dealerHand}
+                holeRevealed={round.holeCardRevealed}
+                onAllCardsVisible={onAllCardsVisible}
+            />
         </View>
     );
 };
