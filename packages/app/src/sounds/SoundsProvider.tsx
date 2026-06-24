@@ -3,6 +3,8 @@ import * as Haptics from 'expo-haptics';
 import type { JSX, MutableRefObject, ReactNode } from 'react';
 import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 
+import { DEAL_DEBOUNCE_MS, isWithinDealDebounce } from './SoundsProvider.utils';
+
 type SoundEffects = {
     deal: () => void;
     flip: () => void;
@@ -36,6 +38,7 @@ const playRef = (ref: MutableRefObject<Audio.Sound | undefined>): void => {
 
 export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Element => {
     const dealRef = useRef<Audio.Sound | undefined>(undefined);
+    const dealLastPlayedRef = useRef(-DEAL_DEBOUNCE_MS);
     const flipRef = useRef<Audio.Sound | undefined>(undefined);
     const chipRef = useRef<Audio.Sound | undefined>(undefined);
     const winRef = useRef<Audio.Sound | undefined>(undefined);
@@ -82,6 +85,8 @@ export const SoundsProvider = ({ children }: { children: ReactNode }): JSX.Eleme
     const value = useMemo<SoundEffects>(
         () => ({
             deal: () => {
+                if (isWithinDealDebounce(dealLastPlayedRef.current)) return;
+                dealLastPlayedRef.current = Date.now();
                 playRef(dealRef);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
             },

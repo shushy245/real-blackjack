@@ -60,6 +60,31 @@ describe('useSoundEffects', () => {
         expect(getMockSound(0).replayAsync).toHaveBeenCalled();
     });
 
+    it('deal() plays only once when called rapidly in succession', async () => {
+        const effects = await setup();
+        await act(() => {
+            effects.deal();
+            effects.deal();
+            effects.deal();
+            effects.deal();
+        });
+        expect(getMockSound(0).replayAsync).toHaveBeenCalledTimes(1);
+    });
+
+    it('deal() plays again after the debounce window passes', async () => {
+        const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(0);
+        const effects = await setup();
+        await act(() => {
+            effects.deal();
+        });
+        dateSpy.mockReturnValue(201);
+        await act(() => {
+            effects.deal();
+        });
+        expect(getMockSound(0).replayAsync).toHaveBeenCalledTimes(2);
+        dateSpy.mockRestore();
+    });
+
     it('flip() calls replayAsync on the flip sound', async () => {
         const effects = await setup();
         await act(() => {
