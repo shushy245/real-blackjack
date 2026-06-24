@@ -3,7 +3,7 @@ import type { Hand } from '@real-blackjack/common';
 export const hasMoreCardsToShow = (visibleCount: number, totalCards: number): boolean => visibleCount < totalCards;
 
 export const CARD_WIDTH = 70;
-export const CARD_HEIGHT = 98;
+export const CARD_HEIGHT = 95;
 export const OVERLAP = 22;
 
 export type ScoreBadgeVariant = 'normal' | 'blackjack' | 'bust';
