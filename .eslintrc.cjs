@@ -1,3 +1,4 @@
+/* eslint-env node */
 'use strict';
 
 /** @type {import('eslint').Linter.Config} */
@@ -33,10 +34,7 @@ module.exports = {
 
         // ── No type assertions (as X / as any) ───────────────────────────────────
         '@typescript-eslint/no-explicit-any': 'error',
-        '@typescript-eslint/consistent-type-assertions': [
-            'error',
-            { assertionStyle: 'never' },
-        ],
+        '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
 
         // ── No null (use undefined) ───────────────────────────────────────────────
         'no-restricted-syntax': [
@@ -108,10 +106,7 @@ module.exports = {
         'prefer-template': 'error',
 
         // ── No unused vars (prefix _ for intentionally unused) ───────────────────
-        '@typescript-eslint/no-unused-vars': [
-            'error',
-            { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-        ],
+        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
 
         // ── Prettier ──────────────────────────────────────────────────────────────
         'prettier/prettier': [
@@ -140,14 +135,7 @@ module.exports = {
                 groups: [
                     ['value-builtin', 'value-external', 'type-builtin', 'type-external'],
                     ['value-internal', 'type-internal'],
-                    [
-                        'value-parent',
-                        'value-sibling',
-                        'value-index',
-                        'type-parent',
-                        'type-sibling',
-                        'type-index',
-                    ],
+                    ['value-parent', 'value-sibling', 'value-index', 'type-parent', 'type-sibling', 'type-index'],
                     'style',
                     'unknown',
                 ],
@@ -269,6 +257,12 @@ module.exports = {
                     {
                         selector: 'JSXExpressionContainer > Literal[value=type(string)]',
                         message: 'Use {`backticks`} for JSX text expressions, not quoted strings.',
+                    },
+                    // ── Raw expect() forbidden in test bodies — use driver assert.* methods ──
+                    {
+                        selector: "CallExpression[callee.name='expect']",
+                        message:
+                            'Raw expect() in test body is forbidden — assertions belong in a driver assert.* method (*.driver.ts / *.driver.tsx).',
                     },
                     // ── Builder pattern: no inline domain object factories in test files ──
                     // Catches: const f = (): AnyType => ({ ... }) — implicit arrow with object body

@@ -1,11 +1,7 @@
 import { Rank, Suit, type Card } from '../../engine/types';
 
 class CardBuilder {
-    private state: Card;
-
-    constructor(overrides?: Partial<Card>) {
-        this.state = { rank: Rank.Two, suit: Suit.Spades, ...overrides };
-    }
+    private state: Card = { rank: Rank.Two, suit: Suit.Spades };
 
     withRank(rank: Rank): this {
         this.state = { ...this.state, rank };
@@ -24,4 +20,4 @@ class CardBuilder {
     }
 }
 
-export const aCard = (...args: ConstructorParameters<typeof CardBuilder>): CardBuilder => new CardBuilder(...args);
+export const aCard = (): CardBuilder => new CardBuilder();
