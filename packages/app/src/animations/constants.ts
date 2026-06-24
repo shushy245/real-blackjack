@@ -1,1 +1,1 @@
-export const FLIP_DURATION_MS = 450;
+export const FLIP_DURATION_MS = 900;
